@@ -1,0 +1,9 @@
+[Desktop Entry]
+Version=1.0
+Type=Application
+Name=Next.js Admin
+Comment=Run the Next.js development server
+Exec=/home/max/Desktop/FG/new/run.sh
+Icon=utilities-terminal
+Terminal=true
+Categories=Development;

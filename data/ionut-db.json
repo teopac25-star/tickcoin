@@ -1,0 +1,26 @@
+{
+  "accounts": [
+    {
+      "username": "max",
+      "email": "teopac25@gmail.com",
+      "passwordHash": "8e6c1eaa3b8bbc53931f4e1b1e2e25bd$9396a2be769129d96d823e183450e6c937a5123e42f4cd0f76a4843e0062df92cd5e2f0c7b2c9b456882dd0beae9453a0eeecbf97d5a701be99434a08eab3b39",
+      "balance": 100,
+      "wallets": [],
+      "messages": [],
+      "transactions": [
+        {
+          "id": "1774735518636-initial",
+          "type": "received",
+          "amount": 100,
+          "counterparty": "Signup bonus",
+          "description": "Welcome credit for creating your account",
+          "timestamp": "2026-03-28T22:05:18.636Z"
+        }
+      ],
+      "createdAt": "2026-03-28T22:05:18.636Z",
+      "sessionToken": "976b02b7c46744af0fd7392f2f19e380232c18abf560d406"
+    }
+  ],
+  "chatMessages": [],
+  "posts": []
+}

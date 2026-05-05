@@ -1,0 +1,13 @@
+# Public Access File
+# Share this file with users to access the .onion website.
+
+# To get the .onion address, run the following command after setting up Tor:
+# sudo cat /var/lib/tor/hidden_service/hostname
+
+# Access the website via Tor Browser:
+# http://uio423w3qzczrorsclz4fty3wpybx4upl5gjamh5lbufg6cwxryk7yad.onion
+
+# Instructions for users:
+# 1. Install Tor Browser from https://www.torproject.org/download/
+# 2. Open Tor Browser and navigate to the .onion URL above.
+# 3. The website is anonymous and accessible only through Tor.

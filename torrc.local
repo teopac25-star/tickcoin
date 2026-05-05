@@ -1,0 +1,6 @@
+DataDirectory /home/max/Desktop/FG/new/tor_data
+HiddenServiceDir /home/max/Desktop/FG/new/tor_hidden_service
+HiddenServicePort 80 127.0.0.1:3000
+SocksPort 0
+ControlPort 0
+Log notice stdout
