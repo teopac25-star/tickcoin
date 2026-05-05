@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Ionut | Anonymous Crypto",
-  description: "Ionut is a privacy-first cryptocurrency with Tor integration, secure wallets, and anonymous access.",
+  title: "TickCoin | Anonymous Crypto",
+  description: "TickCoin is a privacy-first cryptocurrency with Tor integration, secure wallets, and anonymous access.",
   icons: {
     icon: "/favicon.ico",
   },

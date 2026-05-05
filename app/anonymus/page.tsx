@@ -20,7 +20,7 @@ interface AnonymousPost {
   comments: AnonymousComment[];
 }
 
-const SESSION_KEY = 'ionut_session';
+const SESSION_KEY = 'tickcoin_session';
 
 const getSessionUsername = (): string | null => {
   if (typeof window === 'undefined') return null;
@@ -47,7 +47,7 @@ async function loadAnonymusPosts(): Promise<AnonymousPost[]> {
 
 function saveAnonymusPosts(posts: AnonymousPost[]) {
   if (typeof window === 'undefined') return;
-  window.localStorage.setItem('ionut_anonymus_posts', JSON.stringify(posts));
+  window.localStorage.setItem('tickcoin_anonymus_posts', JSON.stringify(posts));
 }
 
 export default function AnonymusPage() {
@@ -126,7 +126,7 @@ export default function AnonymusPage() {
     <SiteShell>
       <main className="max-w-5xl mx-auto py-16 px-6">
         <div className="mb-10 text-center">
-          <p className="text-sm uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-400">Ionut Anonymus Feed</p>
+          <p className="text-sm uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-400">TickCoin Anonymus Feed</p>
           <h1 className="text-4xl font-bold text-black dark:text-zinc-50 mt-4">Post photos and updates anonymously</h1>
           <p className="mt-3 text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
             Share a photo, write a post, and browse the anonymous feed. Everything is stored locally so you can post fast without an account.

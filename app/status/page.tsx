@@ -43,7 +43,7 @@ export default function StatusPage() {
       <main className="max-w-3xl mx-auto py-20 px-6">
         <div className="mb-10 text-center">
           <h1 className="text-4xl font-bold text-slate-950 dark:text-white">System Status</h1>
-          <p className="mt-3 text-slate-600 dark:text-slate-400">Check Tor health, view your hidden service address, and keep your Ionut host reachable.</p>
+          <p className="mt-3 text-slate-600 dark:text-slate-400">Check Tor health, view your hidden service address, and keep your TickCoin host reachable.</p>
         </div>
         <div className="space-y-6">
           <div className="rounded-[1.75rem] bg-white p-6 shadow-xl ring-1 ring-slate-200 dark:bg-zinc-900 dark:ring-white/10">
@@ -79,11 +79,11 @@ export default function StatusPage() {
             <div className="grid gap-3 sm:grid-cols-2">
               <div className="rounded-3xl bg-slate-50 p-4 dark:bg-zinc-950">
                 <p className="text-sm uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">Total Supply</p>
-                <p className="mt-2 font-semibold text-slate-900 dark:text-slate-100">1.5B IONUT</p>
+                <p className="mt-2 font-semibold text-slate-900 dark:text-slate-100">7.5B TICK</p>
               </div>
               <div className="rounded-3xl bg-slate-50 p-4 dark:bg-zinc-950">
                 <p className="text-sm uppercase tracking-[0.3em] text-slate-500 dark:text-slate-400">Circulating</p>
-                <p className="mt-2 font-semibold text-slate-900 dark:text-slate-100">1.0B IONUT</p>
+                <p className="mt-2 font-semibold text-slate-900 dark:text-slate-100">2.5B TICK</p>
               </div>
             </div>
             <div className="mt-5 text-sm text-slate-600 dark:text-slate-400">

@@ -2,7 +2,7 @@
 
 import React, { createContext, useCallback, useContext, useEffect, useState } from "react";
 
-const STORAGE_KEY = "ionut_account";
+const STORAGE_KEY = "tickcoin_account";
 
 export interface AccountData {
   username: string;

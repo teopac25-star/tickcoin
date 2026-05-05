@@ -57,7 +57,7 @@ type Step = 'form' | 'verify' | 'ready';
 type AccountTab = 'overview' | 'wallets' | 'messages' | 'transactions' | 'security';
 
 const EMAIL_REGEX = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-const SESSION_KEY = 'ionut_session';
+const SESSION_KEY = 'tickcoin_session';
 
 interface SessionState {
   username: string;
@@ -86,7 +86,7 @@ const saveSession = (session: SessionState) => {
 const clearSession = () => {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(SESSION_KEY);
-  window.localStorage.removeItem('ionut_account');
+  window.localStorage.removeItem('tickcoin_account');
 };
 
 const bufferToBase64 = (buffer: ArrayBuffer) => {
@@ -174,7 +174,7 @@ const requestAccount = async (body: any) => {
   const token = getSessionToken();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) {
-    headers['x-ionut-session'] = token;
+    headers['x-tickcoin-session'] = token;
   }
 
   const response = await fetch('/api/account', {
@@ -193,7 +193,7 @@ const fetchAccount = async (username: string) => {
   const token = getSessionToken();
   const headers: Record<string, string> = {};
   if (token) {
-    headers['x-ionut-session'] = token;
+    headers['x-tickcoin-session'] = token;
   }
 
   const response = await fetch(`/api/account?username=${encodeURIComponent(username)}`, {
@@ -271,7 +271,7 @@ export default function AccountPage() {
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
-      if (event.key !== 'ionut_account') return;
+      if (event.key !== 'tickcoin_account') return;
       if (!event.newValue) {
         setCurrentAccount(null);
         return;
@@ -305,7 +305,7 @@ export default function AccountPage() {
       const url = URL.createObjectURL(blob);
       const anchor = document.createElement('a');
       anchor.href = url;
-      anchor.download = `ionut-account-backup-${currentAccount.username}.txt`;
+      anchor.download = `tickcoin-account-backup-${currentAccount.username}.txt`;
       anchor.click();
       URL.revokeObjectURL(url);
       setBackupMessage('Encrypted backup created successfully. Keep the password safe.');
@@ -335,7 +335,7 @@ export default function AccountPage() {
     }
   };
 
-  const GLOBAL_TRANSFER_KEY = 'ionut_global_transfers';
+  const GLOBAL_TRANSFER_KEY = 'tickcoin_global_transfers';
 
   const loadGlobalTransfers = (): GlobalTransfer[] => {
     const raw = localStorage.getItem(GLOBAL_TRANSFER_KEY);
@@ -468,7 +468,7 @@ export default function AccountPage() {
         {
           id: `${Date.now()}-welcome`,
           sender: 'them',
-          text: `Welcome to Ionut, ${form.username.trim()}. Use this chat to message support and track your account activity.`,
+          text: `Welcome to TickCoin, ${form.username.trim()}. Use this chat to message support and track your account activity.`,
           createdAt: new Date().toISOString(),
         },
       ],
@@ -486,7 +486,7 @@ export default function AccountPage() {
         {
           id: `${Date.now()}-welcome-notification`,
           type: 'message',
-          title: 'Welcome to Ionut',
+          title: 'Welcome to TickCoin',
           description: 'Your account is ready. Track activity and messages from the notification center.',
           createdAt: new Date().toISOString(),
           read: false,
@@ -625,7 +625,7 @@ export default function AccountPage() {
     const reply: AccountMessage = {
       id: `${Date.now()}-reply-${Math.random().toString(36).slice(2)}`,
       sender: 'them',
-      text: `Ionut Support has received your message: "${messageDraft.trim()}". We will follow up shortly.`,
+      text: `TickCoin Support has received your message: "${messageDraft.trim()}". We will follow up shortly.`,
       createdAt: new Date().toISOString(),
     };
     const notification = createNotification(
@@ -641,7 +641,7 @@ export default function AccountPage() {
     saveAccount(updated);
     setMessageDraft('');
     setError('');
-    setFeedback('Message sent. Ionut Support replied instantly.');
+    setFeedback('Message sent. TickCoin Support replied instantly.');
   };
 
   const removeNote = (id: string) => {
@@ -667,7 +667,7 @@ export default function AccountPage() {
       type,
       amount,
       counterparty: transactionForm.counterparty.trim() || 'External',
-      description: transactionForm.description.trim() || (type === 'sent' ? 'Sent IONUT' : 'Received IONUT'),
+      description: transactionForm.description.trim() || (type === 'sent' ? 'Sent TICK' : 'Received TICK'),
       timestamp: new Date().toISOString(),
     };
 
@@ -718,7 +718,7 @@ export default function AccountPage() {
           <div className="grid gap-8 lg:grid-cols-[1.5fr_1fr]">
             <div>
               <p className="text-sm uppercase tracking-[0.4em] text-slate-400">Account hub</p>
-              <h1 className="mt-4 text-4xl font-bold">Secure account management for Ionut users</h1>
+              <h1 className="mt-4 text-4xl font-bold">Secure account management for TickCoin users</h1>
               <p className="mt-4 max-w-xl text-slate-300">
                 Create an account, manage wallets, send secure transfers, and keep your profile private with encrypted backups and stealth privacy controls.
               </p>
@@ -841,7 +841,7 @@ export default function AccountPage() {
               </button>
               <div className="flex flex-col gap-3 sm:flex-row">
                 <a
-                  href={`mailto:${pendingAccount.email}?subject=Ionut Verification Code&body=Your%20verification%20code%20is%20${verificationCode}`}
+                  href={`mailto:${pendingAccount.email}?subject=TickCoin Verification Code&body=Your%20verification%20code%20is%20${verificationCode}`}
                   className="inline-flex w-full items-center justify-center rounded-full border border-zinc-900 px-4 py-3 text-sm font-medium text-zinc-900 hover:bg-zinc-100 dark:border-zinc-100 dark:text-zinc-100 dark:hover:bg-zinc-800"
                 >
                   Send Code via Email
@@ -917,7 +917,7 @@ export default function AccountPage() {
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <div>
                       <h2 className="text-xl font-semibold">Profile</h2>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">Protect your personal details while browsing Ionut.</p>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">Protect your personal details while browsing TickCoin.</p>
                     </div>
                     <button
                       type="button"
@@ -930,7 +930,7 @@ export default function AccountPage() {
                   <div className="space-y-3 text-sm text-zinc-600 dark:text-zinc-400">
                     <p><strong>Username:</strong> {currentAccount.username}</p>
                     <p><strong>Email:</strong> {privacyMode ? maskEmail(currentAccount.email) : currentAccount.email}</p>
-                    <p><strong>Balance:</strong> {privacyMode ? `${currentAccount.balance.toFixed(2)} IONUT` : `${currentAccount.balance.toFixed(2)} IONUT`}</p>
+                    <p><strong>Balance:</strong> {privacyMode ? `${currentAccount.balance.toFixed(2)} TICK` : `${currentAccount.balance.toFixed(2)} TICK`}</p>
                     <p><strong>Wallets:</strong> {currentAccount.wallets.length}</p>
                     <p><strong>Messages:</strong> {currentAccount.messages.length}</p>
                     <p><strong>Transactions:</strong> {currentAccount.transactions.length}</p>
@@ -1068,12 +1068,12 @@ export default function AccountPage() {
 
                   {section === 'messages' && (
                     <div className="space-y-6">
-                      <p className="text-zinc-600 dark:text-zinc-400">This is your chat view. Send a message to Ionut Support and see conversation bubbles along the way.</p>
+                      <p className="text-zinc-600 dark:text-zinc-400">This is your chat view. Send a message to TickCoin Support and see conversation bubbles along the way.</p>
                       <div className="rounded-3xl border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-900">
                         <div className="mb-4 flex items-center gap-3 border-b border-zinc-200 pb-4 dark:border-zinc-700">
                           <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-900 text-sm font-semibold text-white">I</div>
                           <div>
-                            <p className="font-semibold text-zinc-900 dark:text-zinc-100">Ionut Support</p>
+                            <p className="font-semibold text-zinc-900 dark:text-zinc-100">TickCoin Support</p>
                             <p className="text-xs text-zinc-500 dark:text-zinc-400">Active now</p>
                           </div>
                         </div>
@@ -1085,7 +1085,7 @@ export default function AccountPage() {
                               <div key={note.id} className={`flex ${note.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
                                 <div className={`max-w-[78%] rounded-3xl p-4 text-sm leading-relaxed shadow-sm ${note.sender === 'me' ? 'bg-slate-900 text-white rounded-br-[6px] rounded-bl-3xl rounded-tr-3xl rounded-tl-3xl' : 'bg-white text-zinc-900 dark:bg-zinc-800 dark:text-zinc-100 rounded-bl-[6px] rounded-br-3xl rounded-tl-3xl rounded-tr-3xl'}`}>
                                   <div className="flex items-center justify-between gap-3">
-                                    <p className="text-xs text-zinc-500 dark:text-zinc-400">{note.sender === 'me' ? 'You' : 'Ionut'}</p>
+                                    <p className="text-xs text-zinc-500 dark:text-zinc-400">{note.sender === 'me' ? 'You' : 'TickCoin'}</p>
                                     {note.sender === 'me' ? (
                                       <button
                                         type="button"
@@ -1125,7 +1125,7 @@ export default function AccountPage() {
 
                   {section === 'transactions' && (
                     <div className="space-y-6">
-                      <p className="text-sky-700 dark:text-sky-300">Use this transfer panel to move Ionut tokens by recipient username, just like sending crypto to a friend while keeping a clean social wallet feed.</p>
+                      <p className="text-sky-700 dark:text-sky-300">Use this transfer panel to move TickCoin tokens by recipient username, just like sending crypto to a friend while keeping a clean social wallet feed.</p>
                       <div className="rounded-3xl bg-sky-50 p-6 dark:bg-slate-950">
                         <div className="grid gap-4 sm:grid-cols-2">
                           <label className="block text-sm text-zinc-700 dark:text-zinc-300">
@@ -1180,14 +1180,14 @@ export default function AccountPage() {
                             onClick={() => addTransaction('sent')}
                             className="rounded-full bg-blue-600 px-5 py-3 text-sm font-semibold text-white hover:bg-blue-700"
                           >
-                            Transfer IONUT
+                            Transfer TICK
                           </button>
                           <button
                             type="button"
                             onClick={() => addTransaction('received')}
                             className="rounded-full bg-emerald-600 px-5 py-3 text-sm font-semibold text-white hover:bg-emerald-700"
                           >
-                            Receive IONUT
+                            Receive TICK
                           </button>
                         </div>
                         {recentRecipients.length > 0 && (
@@ -1223,7 +1223,7 @@ export default function AccountPage() {
                               <p className="mt-3 text-sm text-black dark:text-zinc-100">{tx.description}</p>
                               <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-sm text-zinc-600 dark:text-zinc-400">
                                 <span>{tx.counterparty || 'External'}</span>
-                                <strong>{tx.type === 'sent' ? '-' : '+'}{tx.amount.toFixed(2)} IONUT</strong>
+                                <strong>{tx.type === 'sent' ? '-' : '+'}{tx.amount.toFixed(2)} TICK</strong>
                               </div>
                             </div>
                           ))}

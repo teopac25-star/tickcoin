@@ -11,7 +11,7 @@ interface ChatMessage {
   recipient?: string;
 }
 
-const SESSION_KEY = 'ionut_session';
+const SESSION_KEY = 'tickcoin_session';
 const MAX_MESSAGES = 120;
 
 const getSessionUsername = (): string | null => {

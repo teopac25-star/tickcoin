@@ -14,7 +14,7 @@ import {
   verifySession,
 } from '../../../lib/server-db';
 
-const AUTH_HEADER = 'x-ionut-session';
+const AUTH_HEADER = 'x-tickcoin-session';
 
 function extractAuthToken(request: Request) {
   return request.headers.get(AUTH_HEADER) ?? '';

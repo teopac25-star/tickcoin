@@ -281,7 +281,7 @@ export default function DashboardPage() {
       }
     };
 
-    worker.postMessage({ type: 'start', base: `ionut-browser-mining-${Math.round(Date.now() / 1000)}`, difficulty: DIFFICULTY_PREFIX, batchSize: BATCH_SIZE });
+    worker.postMessage({ type: 'start', base: `tickcoin-browser-mining-${Math.round(Date.now() / 1000)}`, difficulty: DIFFICULTY_PREFIX, batchSize: BATCH_SIZE });
 
     return () => {
       if (workerRef.current) {
