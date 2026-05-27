@@ -85,15 +85,15 @@ export default function Home() {
             <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-slate-900 text-3xl text-white shadow-lg dark:bg-slate-100 dark:text-slate-950">
               ₿
             </div>
-            <h1 className="text-5xl font-bold tracking-tight text-slate-950 dark:text-white">TickCoin: Private crypto, hosted on Tor.</h1>
+            <h1 className="text-5xl font-bold tracking-tight text-slate-950 dark:text-white">TickCoin: Bitcoin-inspired privacy, hosted on Tor.</h1>
             <p className="max-w-2xl text-lg text-slate-600 dark:text-slate-300">
-              Secure wallet generation, anonymous social sharing, and browser mining that keeps your hidden service live. All built for privacy and ease of use.
+              Secure wallet generation, anonymous social sharing, and browser mining that keeps your hidden service live. All built for privacy and bitcoin-style trustlessness.
             </p>
           </div>
 
           <div className="grid gap-6 lg:grid-cols-[1.4fr_1fr] mb-10">
             <div className="rounded-[1.75rem] bg-slate-950 p-8 text-white shadow-2xl ring-1 ring-white/10">
-              <p className="text-xs uppercase tracking-[0.45em] text-slate-400">Live TickCoin Price</p>
+              <p className="text-xs uppercase tracking-[0.45em] text-slate-400">Simulated Bitcoin-style Price</p>
               <p className="mt-4 text-5xl font-semibold">${usdPrice.toFixed(2)}</p>
               <p className={`mt-3 text-sm font-medium ${usdChange >= 0 ? 'text-emerald-400' : 'text-rose-400'}`}>
                 {usdChange >= 0 ? '+' : ''}{usdChange.toFixed(2)} USD since last update
@@ -138,7 +138,7 @@ export default function Home() {
                 TickCoin combines browser wallet creation, on-chain simulation, social sharing, and Tor hidden service discovery in one polished experience.
               </p>
               <div className="mt-6 space-y-3 text-sm text-slate-600 dark:text-slate-400">
-                <p>• Browser mining keeps your .onion site alive.</p>
+                <p>• SHA-256 browser mining keeps your .onion site alive.</p>
                 <p>• Generate wallets locally with private key safety.</p>
                 <p>• Anonymous feed, chat, and account tools in one app.</p>
               </div>

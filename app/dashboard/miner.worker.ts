@@ -1,4 +1,5 @@
-const DIFFICULTY_PREFIX = '0000';
+// This worker simulates Bitcoin-style SHA-256 proof-of-work mining in the browser.
+const DIFFICULTY_PREFIX = '0000'; // Simulated target prefix for browser mining.
 
 interface StartMessage {
   type: 'start';
@@ -58,7 +59,8 @@ self.onmessage = async (event: MessageEvent<Message>) => {
 async function mineLoop() {
   while (running) {
     for (let i = 0; i < batchSize && running; i += 1) {
-      const hash = await sha256(`${base}-${nonce}`);
+      const header = `${base}|${nonce}`;
+      const hash = await sha256(header);
       nonce += 1;
       hashCount += 1;
 

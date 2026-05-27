@@ -2,23 +2,22 @@
 
 import { useEffect, useState } from "react";
 
-const THEME_KEY = "ionut-theme";
+const THEME_KEY = "tickcoin-theme";
 
 export default function ThemeToggle() {
-  const [theme, setTheme] = useState<"light" | "dark">("light");
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window === "undefined") return "light";
+    const stored = window.localStorage.getItem(THEME_KEY) as "light" | "dark" | null;
+    return stored || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+  });
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(THEME_KEY) as "light" | "dark" | null;
-    const preferred = stored || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    setTheme(preferred);
-    document.documentElement.classList.toggle("dark", preferred === "dark");
-  }, []);
+    document.documentElement.classList.toggle("dark", theme === "dark");
+    window.localStorage.setItem(THEME_KEY, theme);
+  }, [theme]);
 
   const toggleTheme = () => {
-    const nextTheme = theme === "dark" ? "light" : "dark";
-    setTheme(nextTheme);
-    window.localStorage.setItem(THEME_KEY, nextTheme);
-    document.documentElement.classList.toggle("dark", nextTheme === "dark");
+    setTheme((current) => (current === "dark" ? "light" : "dark"));
   };
 
   return (

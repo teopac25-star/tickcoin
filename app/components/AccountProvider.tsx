@@ -24,8 +24,31 @@ interface AccountContextValue {
 
 const AccountContext = createContext<AccountContextValue | undefined>(undefined);
 
+function readStoredAccount(): AccountData | null {
+  if (typeof window === "undefined") return null;
+  const stored = window.localStorage.getItem(STORAGE_KEY);
+  if (!stored) return null;
+  try {
+    return JSON.parse(stored) as AccountData;
+  } catch {
+    window.localStorage.removeItem(STORAGE_KEY);
+    return null;
+  }
+}
+
+function sanitizeStoredAccount(account: AccountData): AccountData {
+  const { password, sessionToken, ...rest } = account as Record<string, unknown>;
+
+  return {
+    ...(rest as AccountData),
+    wallets: Array.isArray(account.wallets)
+      ? account.wallets.map((wallet) => ({ address: String((wallet as { address?: unknown }).address || '') }))
+      : [],
+  };
+}
+
 export function AccountProvider({ children }: { children: React.ReactNode }) {
-  const [account, setAccountState] = useState<AccountData | null>(null);
+  const [account, setAccountState] = useState<AccountData | null>(() => readStoredAccount());
 
   const persistAccount = useCallback((nextAccount: AccountData | null) => {
     if (typeof window === "undefined") {
@@ -34,25 +57,27 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
     }
 
     if (nextAccount) {
-      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(nextAccount));
+      window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitizeStoredAccount(nextAccount)));
+      setAccountState(sanitizeStoredAccount(nextAccount));
     } else {
       window.localStorage.removeItem(STORAGE_KEY);
+      setAccountState(null);
     }
-    setAccountState(nextAccount);
   }, []);
 
   const updateAccount = useCallback(
     (updater: (current: AccountData | null) => AccountData | null) => {
       setAccountState((current) => {
         const next = updater(current);
+        const sanitized = next ? sanitizeStoredAccount(next) : null;
         if (typeof window !== "undefined") {
-          if (next) {
-            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(next));
+          if (sanitized) {
+            window.localStorage.setItem(STORAGE_KEY, JSON.stringify(sanitized));
           } else {
             window.localStorage.removeItem(STORAGE_KEY);
           }
         }
-        return next;
+        return sanitized;
       });
     },
     [],
@@ -66,18 +91,6 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as AccountData;
-        setAccountState(parsed);
-      } catch {
-        window.localStorage.removeItem(STORAGE_KEY);
-        setAccountState(null);
-      }
-    }
-
     const handleStorage = (event: StorageEvent) => {
       if (event.key !== STORAGE_KEY) return;
       if (event.newValue) {

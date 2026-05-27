@@ -15,128 +15,27 @@ interface Block {
   previousHash: string;
   reward: number;
   difficulty: string;
+  data: string;
+  chainName: string;
+}
+
+interface ChainTemplate {
+  chainName: string;
+  difficulty: string;
+  previousHash: string;
+  index: number;
+  timestamp: string;
+  data: string;
+  base: string;
 }
 
 const DIFFICULTY_PREFIX = '0000';
 const BATCH_SIZE = 12;
 
-function getSubtleCrypto(): SubtleCrypto | null {
-  const globalCrypto = window.crypto || (window as any).msCrypto;
-  return globalCrypto?.subtle || (globalCrypto as any).webkitSubtle || null;
-}
 
-async function sha256(message: string): Promise<string> {
-  const subtle = getSubtleCrypto();
-  if (subtle) {
-    const encoder = new TextEncoder();
-    const data = encoder.encode(message);
-    const hashBuffer = await subtle.digest('SHA-256', data);
-    const hashArray = Array.from(new Uint8Array(hashBuffer));
-    return hashArray.map((byte) => byte.toString(16).padStart(2, '0')).join('');
-  }
-
-  return jsSha256(message);
-}
-
-function jsSha256(message: string) {
-  const K = [
-    0x428a2f98, 0x71374491, 0xb5c0fbcf, 0xe9b5dba5,
-    0x3956c25b, 0x59f111f1, 0x923f82a4, 0xab1c5ed5,
-    0xd807aa98, 0x12835b01, 0x243185be, 0x550c7dc3,
-    0x72be5d74, 0x80deb1fe, 0x9bdc06a7, 0xc19bf174,
-    0xe49b69c1, 0xefbe4786, 0x0fc19dc6, 0x240ca1cc,
-    0x2de92c6f, 0x4a7484aa, 0x5cb0a9dc, 0x76f988da,
-    0x983e5152, 0xa831c66d, 0xb00327c8, 0xbf597fc7,
-    0xc6e00bf3, 0xd5a79147, 0x06ca6351, 0x14292967,
-    0x27b70a85, 0x2e1b2138, 0x4d2c6dfc, 0x53380d13,
-    0x650a7354, 0x766a0abb, 0x81c2c92e, 0x92722c85,
-    0xa2bfe8a1, 0xa81a664b, 0xc24b8b70, 0xc76c51a3,
-    0xd192e819, 0xd6990624, 0xf40e3585, 0x106aa070,
-    0x19a4c116, 0x1e376c08, 0x2748774c, 0x34b0bcb5,
-    0x391c0cb3, 0x4ed8aa4a, 0x5b9cca4f, 0x682e6ff3,
-    0x748f82ee, 0x78a5636f, 0x84c87814, 0x8cc70208,
-    0x90befffa, 0xa4506ceb, 0xbef9a3f7, 0xc67178f2,
-  ];
-
-  const encoder = new TextEncoder();
-  const messageBytes = Array.from(encoder.encode(message));
-  const bitLength = messageBytes.length * 8;
-
-  messageBytes.push(0x80);
-  while ((messageBytes.length % 64) !== 56) {
-    messageBytes.push(0x00);
-  }
-
-  const lengthArray = new Uint8Array(8);
-  const dataView = new DataView(lengthArray.buffer);
-  dataView.setUint32(4, bitLength >>> 0, false);
-  dataView.setUint32(0, Math.floor(bitLength / 0x100000000), false);
-  messageBytes.push(...lengthArray);
-
-  const H = [
-    0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a,
-    0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19,
-  ];
-
-  const W = new Array(64).fill(0);
-
-  for (let i = 0; i < messageBytes.length; i += 64) {
-    for (let t = 0; t < 16; t += 1) {
-      const j = i + t * 4;
-      W[t] = (messageBytes[j] << 24) | (messageBytes[j + 1] << 16) | (messageBytes[j + 2] << 8) | (messageBytes[j + 3]);
-    }
-    for (let t = 16; t < 64; t += 1) {
-      const s0 = rightRotate(W[t - 15], 7) ^ rightRotate(W[t - 15], 18) ^ (W[t - 15] >>> 3);
-      const s1 = rightRotate(W[t - 2], 17) ^ rightRotate(W[t - 2], 19) ^ (W[t - 2] >>> 10);
-      W[t] = (W[t - 16] + s0 + W[t - 7] + s1) >>> 0;
-    }
-
-    let a = H[0];
-    let b = H[1];
-    let c = H[2];
-    let d = H[3];
-    let e = H[4];
-    let f = H[5];
-    let g = H[6];
-    let h = H[7];
-
-    for (let t = 0; t < 64; t += 1) {
-      const S1 = rightRotate(e, 6) ^ rightRotate(e, 11) ^ rightRotate(e, 25);
-      const ch = (e & f) ^ (~e & g);
-      const temp1 = (h + S1 + ch + K[t] + W[t]) >>> 0;
-      const S0 = rightRotate(a, 2) ^ rightRotate(a, 13) ^ rightRotate(a, 22);
-      const maj = (a & b) ^ (a & c) ^ (b & c);
-      const temp2 = (S0 + maj) >>> 0;
-
-      h = g;
-      g = f;
-      f = e;
-      e = (d + temp1) >>> 0;
-      d = c;
-      c = b;
-      b = a;
-      a = (temp1 + temp2) >>> 0;
-    }
-
-    H[0] = (H[0] + a) >>> 0;
-    H[1] = (H[1] + b) >>> 0;
-    H[2] = (H[2] + c) >>> 0;
-    H[3] = (H[3] + d) >>> 0;
-    H[4] = (H[4] + e) >>> 0;
-    H[5] = (H[5] + f) >>> 0;
-    H[6] = (H[6] + g) >>> 0;
-    H[7] = (H[7] + h) >>> 0;
-  }
-
-  return H.map((value) => value.toString(16).padStart(8, '0')).join('');
-}
-
-function rightRotate(value: number, amount: number) {
-  return (value >>> amount) | (value << (32 - amount));
-}
 
 export default function DashboardPage() {
-  const { account, setAccount, updateAccount } = useAccount();
+  const { account, updateAccount } = useAccount();
   const [mining, setMining] = useState(false);
   const [minerConsent, setMinerConsent] = useState(false);
   const [hashRate, setHashRate] = useState(0);
@@ -145,9 +44,11 @@ export default function DashboardPage() {
   const [status, setStatus] = useState('Ready to mine.');
   const [hostingStatus, setHostingStatus] = useState('Hidden service status unknown.');
   const [hostingActive, setHostingActive] = useState(false);
-  const [onionUrl, setOnionUrl] = useState<string | null>(null);
+    const [onionUrl, setOnionUrl] = useState<string | null>(null);
   const [hostingBusy, setHostingBusy] = useState(false);
   const [chain, setChain] = useState<Block[]>([]);
+  const [chainName, setChainName] = useState('TickCoin Private Chain');
+  const [template, setTemplate] = useState<ChainTemplate | null>(null);
   const [selectedBlockIndex, setSelectedBlockIndex] = useState(0);
 
   const workerRef = useRef<Worker | null>(null);
@@ -160,6 +61,26 @@ export default function DashboardPage() {
   useEffect(() => {
     const savedConsent = localStorage.getItem(MINER_CONSENT_KEY);
     setMinerConsent(savedConsent === 'true');
+
+    async function loadChain() {
+      try {
+        const response = await fetch('/api/blockchain');
+        if (!response.ok) {
+          throw new Error('Unable to load chain');
+        }
+        const data = await response.json();
+        setChain(Array.isArray(data.blocks) ? data.blocks.reverse() : []);
+        setChainName(String(data.chainName || 'TickCoin Private Chain'));
+        setSelectedBlockIndex(data.blocks?.length ? data.blocks.length - 1 : 0);
+      } catch {
+        setChain([]);
+      }
+    }
+
+    loadChain();
+    fetchTemplate().then(setTemplate).catch(() => {
+      setStatus('Unable to fetch block template on page load.');
+    });
   }, []);
 
   useEffect(() => {
@@ -208,8 +129,109 @@ export default function DashboardPage() {
     }
   };
 
+  const updateChainNameOnServer = async (nextName: string) => {
+    setChainName(nextName);
+    try {
+      const response = await fetch('/api/blockchain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'setName', chainName: nextName }),
+      });
+      if (!response.ok) {
+        throw new Error('Unable to update chain name.');
+      }
+      const data = await response.json();
+      if (Array.isArray(data.chain?.blocks)) {
+        setChain(data.chain.blocks.reverse());
+        setSelectedBlockIndex(data.chain.blocks.length - 1);
+      }
+    } catch {
+      setStatus('Unable to update chain name on the server.');
+    }
+  };
+
+  const resetServerChain = async () => {
+    if (mining) {
+      stopMining('Stopping mining before chain reset.');
+    }
+    setStatus('Resetting private blockchain...');
+    try {
+      const response = await fetch('/api/blockchain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'reset', chainName }),
+      });
+      if (!response.ok) {
+        throw new Error('Unable to reset chain.');
+      }
+      const data = await response.json();
+      if (Array.isArray(data.chain?.blocks)) {
+        setChain(data.chain.blocks.reverse());
+        setSelectedBlockIndex(data.chain.blocks.length - 1);
+      }
+      setStatus('Private blockchain reset. Mine the next valid block.');
+    } catch {
+      setStatus('Unable to reset the chain on the server.');
+    }
+  };
+
+  const loadChain = async () => {
+    try {
+      const response = await fetch('/api/blockchain');
+      if (!response.ok) {
+        throw new Error('Unable to load chain');
+      }
+      const data = await response.json();
+      setChain(Array.isArray(data.blocks) ? data.blocks.reverse() : []);
+      setChainName(String(data.chainName || 'TickCoin Private Chain'));
+      setSelectedBlockIndex(data.blocks?.length ? data.blocks.length - 1 : 0);
+    } catch {
+      setChain([]);
+    }
+  };
+
+  const fetchTemplate = async () => {
+    const response = await fetch('/api/blockchain?template=true');
+    if (!response.ok) {
+      throw new Error('Unable to get block template.');
+    }
+    const data = await response.json();
+    return data as ChainTemplate;
+  };
+
+  const submitCandidate = async (nonce: number, hash: string) => {
+    if (!template) {
+      throw new Error('No mining template available.');
+    }
+
+    const response = await fetch('/api/blockchain', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        action: 'submit',
+        block: {
+          chainName: template.chainName,
+          previousHash: template.previousHash,
+          index: template.index,
+          timestamp: template.timestamp,
+          data: template.data,
+          base: template.base,
+          nonce,
+          hash,
+        },
+      }),
+    });
+
+    const data = await response.json();
+    if (!response.ok) {
+      throw new Error(data?.message || 'Block rejected.');
+    }
+    return data as { success: true; chain: { blocks: Block[]; chainName: string } };
+  };
+
   useEffect(() => {
     fetchHostStatus();
+    loadChain();
   }, []);
 
   const stopMining = (message: string) => {
@@ -239,6 +261,12 @@ export default function DashboardPage() {
       return;
     }
 
+    if (!template) {
+      setStatus('Waiting for a block template before mining.');
+      setMining(false);
+      return;
+    }
+
     const worker = new Worker(new URL('./miner.worker.ts', import.meta.url), { type: 'module' });
     workerRef.current = worker;
     lastStatsRef.current = performance.now();
@@ -247,41 +275,40 @@ export default function DashboardPage() {
     setMined(0);
     setStatus('Mining in browser...');
 
-    worker.onmessage = (event: MessageEvent<any>) => {
-      const message = event.data;
+    worker.onmessage = async (event: MessageEvent<unknown>) => {
+      const message = event.data as Record<string, unknown>;
 
       if (message.type === 'stats') {
-        setHashRate(message.hashRate ?? 0);
-        setHashes((prev) => prev + (message.hashes ?? 0));
+        setHashRate(typeof message.hashRate === 'number' ? message.hashRate : 0);
+        setHashes((prev) => prev + (typeof message.hashes === 'number' ? message.hashes : 0));
       }
 
       if (message.type === 'found') {
         setMined((previous) => parseFloat((previous + 0.01).toFixed(2)));
-        setChain((currentChain) => {
-          const previousHash = currentChain.length ? currentChain[currentChain.length - 1].hash : '0'.repeat(64);
-          const newBlock: Block = {
-            index: currentChain.length + 1,
-            timestamp: new Date().toISOString(),
-            nonce: message.nonce,
-            hash: message.hash,
-            previousHash,
-            reward: 0.01,
-            difficulty: DIFFICULTY_PREFIX,
-          };
-          return [...currentChain, newBlock];
-        });
-        setSelectedBlockIndex((currentIndex) => Math.max(currentIndex, 0));
-        updateAccount((prevAccount) => {
-          if (!prevAccount) return prevAccount;
-          return {
-            ...prevAccount,
-            balance: parseFloat((prevAccount.balance + 0.01).toFixed(2)),
-          };
-        });
+        const nonce = typeof message.nonce === 'number' ? message.nonce : 0;
+        const hash = typeof message.hash === 'string' ? message.hash : '';
+
+        try {
+          const result = await submitCandidate(nonce, hash);
+          setChain(Array.isArray(result.chain.blocks) ? result.chain.blocks.reverse() : []);
+          setChainName(result.chain.chainName);
+          setSelectedBlockIndex(result.chain.blocks.length - 1);
+          updateAccount((prevAccount) => {
+            if (!prevAccount) return prevAccount;
+            return {
+              ...prevAccount,
+              balance: parseFloat((prevAccount.balance + 0.01).toFixed(2)),
+            };
+          });
+          setStatus(`Block accepted on chain ${result.chain.chainName}.`);
+        } catch (error: unknown) {
+          const messageText = error instanceof Error ? error.message : String(error);
+          stopMining(`Block rejected: ${messageText}`);
+        }
       }
     };
 
-    worker.postMessage({ type: 'start', base: `tickcoin-browser-mining-${Math.round(Date.now() / 1000)}`, difficulty: DIFFICULTY_PREFIX, batchSize: BATCH_SIZE });
+    worker.postMessage({ type: 'start', base: template.base, difficulty: template.difficulty, batchSize: BATCH_SIZE });
 
     return () => {
       if (workerRef.current) {
@@ -302,7 +329,7 @@ export default function DashboardPage() {
     }
   };
 
-  const handleToggleMining = () => {
+  const handleToggleMining = async () => {
     if (mining) {
       stopMining('Mining stopped.');
       return;
@@ -313,15 +340,22 @@ export default function DashboardPage() {
       return;
     }
 
-    setMining(true);
-    setStatus('Starting miner...');
-    ensureHiddenService();
+    setStatus('Fetching mining template...');
+    try {
+      const latestTemplate = await fetchTemplate();
+      setTemplate(latestTemplate);
+      setMining(true);
+      setStatus('Starting miner...');
+      ensureHiddenService();
+    } catch {
+      setStatus('Unable to fetch mining template. Try again later.');
+    }
   };
 
   return (
     <SiteShell>
       <main className="max-w-4xl mx-auto py-16 px-6">
-        <h1 className="text-3xl font-bold text-center text-black dark:text-zinc-50 mb-8">Browser Miner</h1>
+        <h1 className="text-3xl font-bold text-center text-black dark:text-zinc-50 mb-8">Private SHA-256 Blockchain Miner</h1>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
           <div className="bg-white dark:bg-zinc-800 p-6 rounded-3xl shadow-lg ring-1 ring-zinc-100 dark:ring-zinc-800">
@@ -363,27 +397,27 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-center justify-between text-sm text-zinc-700 dark:text-zinc-300">
                 <span>Estimated reward</span>
-                <span>{mined.toFixed(2)} IONUT</span>
+                <span>{mined.toFixed(2)} TICK</span>
               </div>
             </div>
             <button
               type="button"
               onClick={handleToggleMining}
-              className="mt-6 w-full rounded-full bg-black px-5 py-3 text-white transition hover:bg-zinc-800 dark:bg-zinc-50 dark:text-black dark:hover:bg-zinc-200"
+              className="mt-6 w-full rounded-full bg-orange-500 px-5 py-3 text-white transition hover:bg-orange-600"
             >
               {mining ? 'Stop Mining' : 'Start Mining'}
             </button>
           </div>
 
           <div className="bg-white dark:bg-zinc-800 p-6 rounded-3xl shadow-lg ring-1 ring-zinc-100 dark:ring-zinc-800">
-            <h2 className="text-xl font-semibold mb-4">Mobile & Cross-Platform Ready</h2>
+            <h2 className="text-xl font-semibold mb-4">Browser Mining for a Private Chain</h2>
             <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-              This miner runs entirely in your browser, so it works on desktop, laptop, tablet, and mobile devices. No native installation is required.
+              This miner runs in your browser and submits valid SHA-256 proofs to a private blockchain backend. It is a local network experience rather than a live Bitcoin network.
             </p>
             <ul className="list-disc list-inside text-sm space-y-2 text-zinc-600 dark:text-zinc-400">
               <li>Works on Windows, macOS, Linux, Android, and iOS.</li>
-              <li>Uses Web Crypto API when available, with a software fallback when needed.</li>
-              <li>Runs inside the browser, no download needed.</li>
+              <li>Uses Web Crypto SHA-256 when available, falling back to a software implementation.</li>
+              <li>Runs inside the browser, no native installation needed.</li>
               <li>Mining continues only while the page is open and active.</li>
             </ul>
           </div>
@@ -394,7 +428,7 @@ export default function DashboardPage() {
             <h2 className="text-xl font-semibold mb-4">Account Balance</h2>
             <p><strong>Username:</strong> {account.username}</p>
             <p><strong>Email:</strong> {account.email}</p>
-            <p><strong>Balance:</strong> {account.balance.toFixed(2)} IONUT</p>
+            <p><strong>Balance:</strong> {account.balance.toFixed(2)} TICK</p>
           </div>
         ) : (
           <div className="bg-white dark:bg-zinc-800 p-6 rounded-3xl shadow-lg ring-1 ring-zinc-100 dark:ring-zinc-800 mb-8">
@@ -405,20 +439,45 @@ export default function DashboardPage() {
         )}
 
         <div className="bg-white dark:bg-zinc-800 p-6 rounded-3xl shadow-lg ring-1 ring-zinc-100 dark:ring-zinc-800 mb-8">
-          <h2 className="text-xl font-semibold mb-4">Flipping Blockchain</h2>
-          <p className="text-zinc-600 dark:text-zinc-400 mb-4">
-            Each valid proof-of-work result becomes a block in a simple browser chain. Flip through mined blocks to inspect hash, nonce, parent hash, and reward.
-          </p>
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-semibold mb-4">Manage Your Private Blockchain</h2>
+              <p className="text-zinc-600 dark:text-zinc-400 mb-4">
+                Each valid proof-of-work result is submitted to your private backend chain. Inspect mined blocks, verify hashes, and reset the chain whenever you want.
+              </p>
+            </div>
+            <div className="w-full sm:w-auto">
+              <label className="block text-sm text-zinc-700 dark:text-zinc-300">
+                Chain name
+                <input
+                  value={chainName}
+                  onChange={(event) => {
+                    setChainName(event.target.value);
+                  }}
+                  onBlur={(event) => updateChainNameOnServer(event.target.value)}
+                  className="mt-2 w-full rounded-2xl border border-zinc-200 bg-zinc-50 px-3 py-2 text-sm text-black outline-none transition focus:border-black dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-100"
+                />
+              </label>
+              <button
+                type="button"
+                onClick={resetServerChain}
+                className="mt-4 w-full rounded-full bg-black px-4 py-3 text-sm font-semibold text-white hover:bg-zinc-800 dark:bg-zinc-50 dark:text-black dark:hover:bg-zinc-200"
+              >
+                Reset Private Blockchain
+              </button>
+            </div>
+          </div>
           {chain.length > 0 ? (
             <>
               <div className="space-y-3 mb-4">
                 <div className="rounded-3xl bg-zinc-100 p-5 dark:bg-zinc-900">
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">Chain: {chainName}</p>
                       <p className="text-sm text-zinc-500 dark:text-zinc-400">Block #{chain[selectedBlockIndex].index}</p>
                       <p className="text-sm text-zinc-500 dark:text-zinc-400">Mined at {new Date(chain[selectedBlockIndex].timestamp).toLocaleTimeString()}</p>
                     </div>
-                    <span className="rounded-full bg-black px-3 py-1 text-xs font-semibold text-white dark:bg-zinc-50 dark:text-black">Reward {chain[selectedBlockIndex].reward.toFixed(2)} IONUT</span>
+                    <span className="rounded-full bg-black px-3 py-1 text-xs font-semibold text-white dark:bg-zinc-50 dark:text-black">Reward {chain[selectedBlockIndex].reward.toFixed(2)} TICK</span>
                   </div>
                   <div className="mt-4 space-y-2 text-sm text-zinc-700 dark:text-zinc-300">
                     <p><strong>Nonce:</strong> {chain[selectedBlockIndex].nonce}</p>
@@ -448,14 +507,14 @@ export default function DashboardPage() {
               </div>
             </>
           ) : (
-            <p className="text-sm text-zinc-600 dark:text-zinc-400">No blocks mined yet. Start mining to generate a toy chain and flip through blocks.</p>
+            <p className="text-sm text-zinc-600 dark:text-zinc-400">No blocks mined yet. Reset the private blockchain and start mining your first valid block.</p>
           )}
         </div>
 
         <div className="bg-white dark:bg-zinc-800 p-6 rounded-3xl shadow-lg ring-1 ring-zinc-100 dark:ring-zinc-800">
           <h2 className="text-xl font-semibold mb-4">How it works</h2>
           <p className="text-zinc-600 dark:text-zinc-400">
-            The miner computes SHA-256 hashes in the browser against a lightweight difficulty target. It is built for compatibility across modern devices and browsers, not real blockchain mining. The in-browser chain is a simplified toy blockchain that flips through blocks as they are found.
+            Your browser computes SHA-256 proofs against a backend block template. Valid blocks are submitted to a private chain stored on the server, giving a real chain history even after you leave the page.
           </p>
           <p className="mt-4 text-sm text-zinc-500 dark:text-zinc-400">
             Keep this tab open while mining. Mobile browsers may reduce CPU activity for battery savings.

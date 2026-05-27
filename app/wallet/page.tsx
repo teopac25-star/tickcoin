@@ -1,7 +1,7 @@
 'use client';
 
 import { Wallet as EthersWallet, dataSlice, getAddress, keccak256, toUtf8Bytes } from 'ethers';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import CopyField from '../components/CopyField';
 import SiteShell from '../components/SiteShell';
 import { useAccount } from '../components/AccountProvider';
@@ -12,12 +12,16 @@ interface Wallet {
   mnemonic: string;
 }
 
+interface SavedWallet {
+  address: string;
+}
+
 interface Account {
   username: string;
   email: string;
   balance: number;
   password?: string;
-  wallets: Wallet[];
+  wallets: SavedWallet[];
   [key: string]: unknown;
 }
 
@@ -29,7 +33,6 @@ export default function WalletPage() {
     updateAccount: (updater: (current: Account | null) => Account | null) => void;
     clearAccount: () => void;
   };
-  const [savedWallets, setSavedWallets] = useState<Wallet[]>([]);
   const [message, setMessage] = useState('');
   const [stealthAddress, setStealthAddress] = useState<string | null>(null);
 
@@ -41,11 +44,10 @@ export default function WalletPage() {
 
     const updatedAccount: Account = {
       ...globalAccount,
-      wallets: [...(globalAccount.wallets || []), wallet],
+      wallets: [...(globalAccount.wallets || []), { address: wallet.address }],
     };
     setGlobalAccount(updatedAccount);
-    setSavedWallets(updatedAccount.wallets || []);
-    setMessage('Wallet saved to your account. You can create more wallets or view them below.');
+    setMessage('Public wallet address saved to your account. Private keys are never persisted automatically.');
   };
 
   const generateWallet = () => {
@@ -72,23 +74,20 @@ export default function WalletPage() {
     setMessage('Stealth address generated for one-time private receives.');
   };
 
-  useEffect(() => {
-    setSavedWallets(globalAccount?.wallets || []);
-  }, [globalAccount]);
 
   return (
     <SiteShell>
       <main className="max-w-3xl mx-auto py-20 px-6">
         <div className="mb-12 rounded-[2rem] bg-slate-950 p-10 text-white shadow-2xl ring-1 ring-white/10">
-          <p className="text-sm uppercase tracking-[0.4em] text-slate-400">Wallet studio</p>
-          <h1 className="mt-4 text-4xl font-bold">Generate secure crypto wallets with privacy tools</h1>
+          <p className="text-sm uppercase tracking-[0.4em] text-orange-300">Bitcoin Wallet Studio</p>
+          <h1 className="mt-4 text-4xl font-bold">Generate secure BIP39 wallets with privacy tools</h1>
           <p className="mt-4 max-w-2xl text-slate-300">
-            Create wallets locally, save them safely, and derive stealth addresses for one-time private receives.
+            Create wallets locally with BIP39 mnemonic recovery, save them safely, and derive one-time receive addresses for stronger privacy.
           </p>
         </div>
         <div className="text-center mb-8">
-          <button onClick={generateWallet} className="bg-purple-600 text-white px-6 py-3 rounded-full hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-300 dark:focus:ring-purple-500 transition-colors">
-            Generate New Wallet
+          <button onClick={generateWallet} className="bg-orange-500 text-white px-6 py-3 rounded-full hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-300 transition-colors">
+            Generate Bitcoin-style Wallet
           </button>
         </div>
         {wallet && (
@@ -96,30 +95,30 @@ export default function WalletPage() {
             <h2 className="text-xl font-semibold mb-4">Your Wallet</h2>
             <div className="space-y-4">
               <CopyField label="Address" value={wallet.address} description="Public address can be shared for deposits." />
-              <CopyField label="Private Key" value={wallet.privateKey} description="Keep this private and never share it." />
-              <CopyField label="Mnemonic Phrase" value={wallet.mnemonic} description="Store this phrase securely for recovery." />
+              <CopyField label="Private Key" value={wallet.privateKey} description="Keep this private and never share it." sensitive />
+              <CopyField label="Mnemonic Seed (BIP39)" value={wallet.mnemonic} description="Store this phrase securely for recovery." sensitive />
             </div>
             <div className="mt-6 flex flex-col gap-3 sm:flex-row">
               <button
                 type="button"
                 onClick={saveWalletToAccount}
-                className="min-w-[160px] rounded-full bg-blue-600 px-5 py-3 text-sm font-medium text-white hover:bg-blue-700"
+                className="min-w-[160px] rounded-full bg-orange-500 px-5 py-3 text-sm font-medium text-white hover:bg-orange-600"
               >
                 Save to Account
               </button>
               <button
                 type="button"
                 onClick={generateWallet}
-                className="min-w-[160px] rounded-full border border-purple-600 px-5 py-3 text-sm font-medium text-purple-700 hover:bg-purple-50 dark:border-purple-400 dark:text-purple-200 dark:hover:bg-purple-950"
+                className="min-w-[160px] rounded-full border border-orange-500 px-5 py-3 text-sm font-medium text-orange-600 hover:bg-orange-50 dark:border-orange-400 dark:text-orange-200 dark:hover:bg-orange-950"
               >
                 Generate Another
               </button>
               <button
                 type="button"
                 onClick={generateStealthAddress}
-                className="min-w-[160px] rounded-full bg-purple-600 px-5 py-3 text-sm font-medium text-white hover:bg-purple-700 focus:outline-none focus:ring-4 focus:ring-purple-300 dark:focus:ring-purple-500"
+                className="min-w-[160px] rounded-full bg-orange-500 px-5 py-3 text-sm font-medium text-white hover:bg-orange-600 focus:outline-none focus:ring-4 focus:ring-orange-300"
               >
-                Generate Stealth Address
+                Generate One-time Address
               </button>
             </div>
             {stealthAddress ? (
@@ -136,11 +135,11 @@ export default function WalletPage() {
             {message}
           </div>
         )}
-        {savedWallets.length > 0 && (
+        {(globalAccount?.wallets ?? []).length > 0 && (
           <div className="bg-white dark:bg-zinc-800 p-6 rounded-3xl shadow-lg ring-1 ring-zinc-100 dark:ring-zinc-800">
             <h2 className="text-xl font-semibold mb-4">Saved Wallets</h2>
             <div className="space-y-4">
-              {savedWallets.map((saved, index) => (
+              {(globalAccount?.wallets ?? []).map((saved, index) => (
                 <div key={`${saved.address}-${index}`} className="rounded-3xl bg-zinc-100 p-4 dark:bg-zinc-900">
                   <p className="text-sm text-zinc-600 dark:text-zinc-400">Wallet #{index + 1}</p>
                   <p className="mt-2 text-sm break-all"><strong>Address:</strong> {saved.address}</p>

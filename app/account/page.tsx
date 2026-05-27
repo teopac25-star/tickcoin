@@ -165,12 +165,7 @@ const maskEmail = (email: string) => {
   return `${visibleLocal}@${visibleDomain}`;
 };
 
-const maskText = (value: string) => {
-  if (value.length <= 4) return '****';
-  return `${value.slice(0, 2)}***${value.slice(-2)}`;
-};
-
-const requestAccount = async (body: any) => {
+const requestAccount = async (body: Record<string, unknown>) => {
   const token = getSessionToken();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) {
@@ -206,32 +201,52 @@ const fetchAccount = async (username: string) => {
   return data as Account;
 };
 
-const normalizeAccount = (raw: any): Account => ({
-  username: raw.username || '',
-  email: raw.email || '',
-  balance: typeof raw.balance === 'number' ? raw.balance : parseFloat(raw.balance) || 0,
-  password: raw.password || undefined,
-  wallets: Array.isArray(raw.wallets) ? raw.wallets : [],
-  messages: Array.isArray(raw.messages)
-    ? raw.messages.map((message: any) => ({
-        id: message?.id || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        sender: message?.sender === 'them' ? 'them' : 'me',
-        text: message?.text || '',
-        createdAt: message?.createdAt || new Date().toISOString(),
-      }))
-    : [],
-  transactions: Array.isArray(raw.transactions) ? raw.transactions : [],
-  notifications: Array.isArray(raw.notifications)
-    ? raw.notifications.map((notification: any) => ({
-        id: notification?.id || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        type: notification?.type === 'transaction' ? 'transaction' : 'message',
-        title: notification?.title || 'Notification',
-        description: notification?.description || '',
-        createdAt: notification?.createdAt || new Date().toISOString(),
-        read: notification?.read === true,
-      }))
-    : [],
-});
+const normalizeAccount = (raw: unknown): Account => {
+  if (typeof raw !== 'object' || raw === null) {
+    return {
+      username: '',
+      email: '',
+      balance: 0,
+      wallets: [],
+      messages: [],
+      transactions: [],
+      notifications: [],
+    };
+  }
+  const obj = raw as Record<string, unknown>;
+  return {
+    username: String(obj.username || ''),
+    email: String(obj.email || ''),
+    balance: typeof obj.balance === 'number' ? obj.balance : parseFloat(String(obj.balance)) || 0,
+    password: obj.password ? String(obj.password) : undefined,
+    wallets: Array.isArray(obj.wallets) ? obj.wallets : [],
+    messages: Array.isArray(obj.messages)
+      ? (obj.messages as unknown[]).map((message: unknown) => {
+          const msg = message as Record<string, unknown>;
+          return {
+            id: String(msg?.id || `${Date.now()}-${Math.random().toString(36).slice(2)}`),
+            sender: msg?.sender === 'them' ? 'them' : 'me',
+            text: String(msg?.text || ''),
+            createdAt: String(msg?.createdAt || new Date().toISOString()),
+          };
+        })
+      : [],
+    transactions: Array.isArray(obj.transactions) ? obj.transactions : [],
+    notifications: Array.isArray(obj.notifications)
+      ? (obj.notifications as unknown[]).map((notification: unknown) => {
+          const notif = notification as Record<string, unknown>;
+          return {
+            id: String(notif?.id || `${Date.now()}-${Math.random().toString(36).slice(2)}`),
+            type: notif?.type === 'transaction' ? 'transaction' : 'message',
+            title: String(notif?.title || 'Notification'),
+            description: String(notif?.description || ''),
+            createdAt: String(notif?.createdAt || new Date().toISOString()),
+            read: notif?.read === true,
+          };
+        })
+      : [],
+  };
+};
 
 export default function AccountPage() {
   const [currentAccount, setCurrentAccount] = useState<Account | null>(null);
@@ -255,12 +270,6 @@ export default function AccountPage() {
   const { setAccount: setGlobalAccount, clearAccount: clearGlobalAccount } = useAccount() as {
     setAccount: (account: Account | null) => void;
     clearAccount: () => void;
-  };
-
-  const getStoredAccount = (): Account | null => {
-    const username = getSessionUsername();
-    if (!username) return null;
-    return null;
   };
 
   const saveAccount = (account: Account) => {
@@ -310,8 +319,9 @@ export default function AccountPage() {
       URL.revokeObjectURL(url);
       setBackupMessage('Encrypted backup created successfully. Keep the password safe.');
       setError('');
-    } catch (error: any) {
-      setError(error?.message || 'Unable to create encrypted backup.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      setError(message || 'Unable to create encrypted backup.');
     }
   };
 
@@ -330,8 +340,9 @@ export default function AccountPage() {
       setGlobalAccount(restoredAccount);
       setBackupMessage('Account backup restored successfully.');
       setError('');
-    } catch (error: any) {
-      setError(error?.message || 'Unable to restore backup.');
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error);
+      setError(message || 'Unable to restore backup.');
     }
   };
 
@@ -565,8 +576,9 @@ export default function AccountPage() {
       setEnteredCode('');
       setStep('ready');
       setFeedback('Account verified and ready.');
-    } catch (err: any) {
-      setError(err.message || 'Unable to verify your account.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || 'Unable to verify your account.');
     }
   };
 
@@ -692,8 +704,9 @@ export default function AccountPage() {
       setTransactionForm({ direction: 'sent', amount: '', counterparty: '', description: '' });
       setError('');
       setFeedback('Transaction recorded successfully.');
-    } catch (err: any) {
-      setError(err.message || 'Unable to record transaction.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || 'Unable to record transaction.');
     }
   };
 
@@ -706,8 +719,9 @@ export default function AccountPage() {
         index,
       });
       saveAccount(normalizeAccount(updatedAccount));
-    } catch (err: any) {
-      setError(err.message || 'Unable to remove wallet.');
+    } catch (err: unknown) {
+      const message = err instanceof Error ? err.message : String(err);
+      setError(message || 'Unable to remove wallet.');
     }
   };
 
@@ -720,7 +734,7 @@ export default function AccountPage() {
               <p className="text-sm uppercase tracking-[0.4em] text-slate-400">Account hub</p>
               <h1 className="mt-4 text-4xl font-bold">Secure account management for TickCoin users</h1>
               <p className="mt-4 max-w-xl text-slate-300">
-                Create an account, manage wallets, send secure transfers, and keep your profile private with encrypted backups and stealth privacy controls.
+                Create an account, manage wallets, send secure transfers, and keep your profile private with client-side PBKDF2/SHA-256 key derivation, AES-GCM encrypted backups, and stealth privacy tools.
               </p>
             </div>
             <div className="space-y-4 rounded-[1.5rem] bg-slate-900/90 p-6 ring-1 ring-white/10">
@@ -799,7 +813,7 @@ export default function AccountPage() {
             </div>
             <p className="mt-4 text-xs text-zinc-500 dark:text-zinc-400">
               {authMode === 'create'
-                ? 'Your password is stored locally for this demo. The verification code is shown on-screen for testing.'
+                ? 'Your password is used locally with PBKDF2/SHA-256 to protect account data. The verification code is shown on-screen for testing.'
                 : 'After your credentials are accepted, a one-time 2FA code is generated and displayed below.'}
             </p>
           </div>
@@ -1237,7 +1251,7 @@ export default function AccountPage() {
                       <p className="text-zinc-600 dark:text-zinc-400">Keep your account safe by storing your password privately and treating your saved wallet keys with care.</p>
                       <div className="rounded-3xl bg-zinc-100 p-6 dark:bg-zinc-900">
                         <p className="text-sm text-zinc-500 dark:text-zinc-400">Two-factor authentication is active for this account. Each login requires a one-time verification code.</p>
-                        <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">Wallet private keys and seed phrases are saved locally in your browser only when you link them to your account.</p>
+                        <p className="mt-3 text-sm text-zinc-500 dark:text-zinc-400">Wallet private keys and seed phrases are saved locally in your browser only when you link them to your account. Backups are encrypted with PBKDF2-derived AES-GCM keys.</p>
                       </div>
                       <div className="mt-6 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-zinc-200 dark:bg-zinc-950 dark:ring-zinc-800">
                         <h3 className="text-lg font-semibold mb-3">Encrypted backup</h3>
@@ -1256,9 +1270,9 @@ export default function AccountPage() {
                           <button
                             type="button"
                             onClick={downloadEncryptedBackup}
-                            className="h-full w-full rounded-3xl bg-slate-950 px-4 py-3 text-sm font-semibold text-white hover:bg-slate-800"
+                            className="h-full w-full rounded-3xl bg-orange-500 px-4 py-3 text-sm font-semibold text-white hover:bg-orange-600"
                           >
-                            Download encrypted backup
+                            Download AES-GCM encrypted backup
                           </button>
                         </div>
                         <div className="mt-5 border-t border-zinc-200 pt-5 dark:border-zinc-700">
