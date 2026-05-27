@@ -39,20 +39,13 @@ async function loadChatMessages(): Promise<ChatMessage[]> {
 
 export default function ChatPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [username, setUsername] = useState('Guest');
+  const [username] = useState(() => getSessionUsername() ?? 'Guest');
   const [draft, setDraft] = useState('');
   const [selectedThread, setSelectedThread] = useState('Global');
   const [manualRecipient, setManualRecipient] = useState('');
-  const [status, setStatus] = useState('Connected');
+  const status = 'Connected';
 
   useEffect(() => {
-    if (typeof window === 'undefined') return;
-
-    const username = getSessionUsername();
-    if (username) {
-      setUsername(username);
-    }
-
     const load = async () => {
       const messages = await loadChatMessages();
       setMessages(messages);
@@ -152,10 +145,10 @@ export default function ChatPage() {
     <SiteShell>
       <main className="max-w-5xl mx-auto py-16 px-6">
         <div className="mb-10 text-center">
-          <p className="text-sm uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-400">Ionut Live Chat</p>
+          <p className="text-sm uppercase tracking-[0.3em] text-zinc-500 dark:text-zinc-400">TickCoin Live Chat</p>
           <h1 className="text-4xl font-bold text-black dark:text-zinc-50 mt-4">Chat with other users</h1>
           <p className="mt-3 text-zinc-600 dark:text-zinc-400 max-w-2xl mx-auto">
-            Interact with other Ionut users in real time. Messages synchronize across browser tabs and local sessions.
+            Interact with other TickCoin users in real time. Messages synchronize across browser tabs and local sessions.
           </p>
         </div>
 

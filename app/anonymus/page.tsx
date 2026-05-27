@@ -54,7 +54,10 @@ export default function AnonymusPage() {
   const [posts, setPosts] = useState<AnonymousPost[]>([]);
   const [caption, setCaption] = useState('');
   const [imageUrl, setImageUrl] = useState('');
-  const [status, setStatus] = useState('Anonymous');
+  const [status, setStatus] = useState(() => {
+    const username = getSessionUsername();
+    return username ? `Anon-${username.slice(0, 6)}` : 'Anonymous';
+  });
   const [commentDrafts, setCommentDrafts] = useState<Record<string, string>>({});
   const [error, setError] = useState('');
 
@@ -65,11 +68,6 @@ export default function AnonymusPage() {
     };
 
     load();
-
-    const username = getSessionUsername();
-    if (username) {
-      setStatus(`Anon-${username.slice(0, 6)}`);
-    }
   }, []);
 
   const createPost = async () => {

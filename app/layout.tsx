@@ -14,8 +14,8 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "TickCoin | Anonymous Crypto",
-  description: "TickCoin is a privacy-first cryptocurrency with Tor integration, secure wallets, and anonymous access.",
+  title: "TickCoin | Bitcoin-inspired Privacy Crypto",
+  description: "TickCoin is a Bitcoin-inspired privacy cryptocurrency with Tor integration, secure wallets, and anonymous access.",
   icons: {
     icon: "/favicon.ico",
   },

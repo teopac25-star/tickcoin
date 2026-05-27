@@ -2,13 +2,17 @@ import { promises as fs } from 'fs';
 import { join } from 'path';
 import crypto from 'crypto';
 
-const DATA_DIR = join(process.cwd(), 'data');
+const DATA_DIR = join(/* turbopackIgnore: true */ process.cwd(), 'data');
 const DB_FILE = join(DATA_DIR, 'ionut-db.json');
 
 export interface Wallet {
   address: string;
-  privateKey: string;
-  mnemonic: string;
+  privateKey?: string;
+  mnemonic?: string;
+}
+
+export interface StoredWallet {
+  address: string;
 }
 
 export interface AccountMessage {
@@ -97,13 +101,22 @@ async function writeDb(db: Database) {
   await fs.writeFile(DB_FILE, JSON.stringify(db, null, 2), 'utf8');
 }
 
+function timingSafeEqual(a: string, b: string) {
+  const bufferA = Buffer.from(a, 'utf8');
+  const bufferB = Buffer.from(b, 'utf8');
+  if (bufferA.length !== bufferB.length) {
+    return false;
+  }
+  return crypto.timingSafeEqual(bufferA, bufferB);
+}
+
 function hashPassword(password: string) {
   return crypto.createHash('sha256').update(password).digest('hex');
 }
 
 function createPasswordHash(password: string) {
   const salt = crypto.randomBytes(16).toString('hex');
-  const derived = crypto.scryptSync(password, salt, 64).toString('hex');
+  const derived = crypto.scryptSync(password, salt, 64, { N: 16384, r: 8, p: 1 }).toString('hex');
   return `${salt}$${derived}`;
 }
 
@@ -111,20 +124,25 @@ function verifyPassword(password: string, storedHash: string) {
   if (storedHash.includes('$')) {
     const [salt, hash] = storedHash.split('$');
     const derived = crypto.scryptSync(password, salt, 64).toString('hex');
-    return derived === hash;
+    return timingSafeEqual(hash, derived);
   }
-  return hashPassword(password) === storedHash;
+  return timingSafeEqual(hashPassword(password), storedHash);
 }
 
 function generateSessionToken() {
-  return crypto.randomBytes(24).toString('hex');
+  return crypto.randomBytes(32).toString('hex');
+}
+
+function sanitizeWallet(wallet: Wallet | StoredWallet) {
+  return { address: wallet.address };
 }
 
 function sanitizeAccount(account: Account) {
-  const { passwordHash, sessionToken, ...rest } = account as Account & { notifications?: any; sessionToken?: string };
+  const { passwordHash, sessionToken, ...rest } = account as Account & { notifications?: unknown; sessionToken?: string };
   return {
     ...rest,
-    notifications: Array.isArray((rest as any).notifications) ? rest.notifications : [],
+    wallets: Array.isArray(account.wallets) ? account.wallets.map(sanitizeWallet) : [],
+    notifications: Array.isArray((rest as Record<string, unknown>).notifications) ? rest.notifications : [],
   };
 }
 
@@ -143,7 +161,10 @@ export async function verifySession(username: string, token: string) {
     return false;
   }
   const account = await getAccountByUsername(username);
-  return Boolean(account?.sessionToken && account.sessionToken === token);
+  if (!account?.sessionToken) {
+    return false;
+  }
+  return timingSafeEqual(account.sessionToken, token);
 }
 
 export async function getAccountBySessionToken(token: string) {
@@ -225,7 +246,7 @@ export async function addWalletToAccount(username: string, wallet: Wallet) {
   if (!account) {
     throw new Error('Account not found.');
   }
-  account.wallets.unshift(wallet);
+  account.wallets.unshift(sanitizeWallet(wallet));
   return saveAccount(account);
 }
 

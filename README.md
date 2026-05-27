@@ -1,46 +1,68 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# TickCoin
+
+TickCoin is a Bitcoin-inspired privacy wallet and Tor platform built with Next.js, featuring SHA-256 browser mining simulation and client-side PBKDF2/AES-GCM security.
+
+## What This Project Includes
+
+- Local BIP39 wallet generation and secure browser wallet export.
+- A browser-based SHA-256 mining demo with toy proof-of-work block creation.
+- Account state stored in browser storage and synchronized across tabs.
+- AES-GCM encrypted account backups derived with PBKDF2/SHA-256.
+- Tor hidden service discovery and status reporting.
+- Anonymous chat and public post feed features.
+- A responsive user interface built using Tailwind CSS.
 
 ## Getting Started
 
-First, run the development server:
+Install dependencies:
+
+```bash
+npm install
+```
+
+Run the development server:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Build & Quality
 
-## Host as Tor Onion Service
+Run the production build and checks:
 
-Run the following command to install Tor, configure a local hidden service, build the app, and launch it on your machine:
+```bash
+npm run build
+npm run typecheck
+npm run lint
+```
+
+Automatically fix lint issues:
+
+```bash
+npm run lint:fix
+```
+
+## Tor Onion Hosting
+
+To install Tor, configure a local hidden service, and start the app, run:
 
 ```bash
 npm run host:onion
 ```
 
-After setup, the script prints your `.onion` address. Open it in Tor Browser to access the app privately.
+The script prints the generated `.onion` address when the service is available.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Structure
 
-## Learn More
+- `app/` — Next.js pages, layouts, and API routes.
+- `lib/` — Server-side helpers and mock database utilities.
+- `contracts/` — Smart contract source code.
+- `tor_hidden_service/` — Hidden service hostname and key material.
 
-To learn more about Next.js, take a look at the following resources:
+## Notes
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- Keep private keys and mnemonics secure.
+- Hidden service detection checks environment variables and local Tor service files.
+- This project is designed for privacy-minded development and experimentation.

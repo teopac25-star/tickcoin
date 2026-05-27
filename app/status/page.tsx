@@ -42,8 +42,8 @@ export default function StatusPage() {
     <SiteShell>
       <main className="max-w-3xl mx-auto py-20 px-6">
         <div className="mb-10 text-center">
-          <h1 className="text-4xl font-bold text-slate-950 dark:text-white">System Status</h1>
-          <p className="mt-3 text-slate-600 dark:text-slate-400">Check Tor health, view your hidden service address, and keep your TickCoin host reachable.</p>
+          <h1 className="text-4xl font-bold text-slate-950 dark:text-white">Network Status</h1>
+          <p className="mt-3 text-slate-600 dark:text-slate-400">Monitor Tor health, .onion availability, and the Bitcoin-inspired privacy node status.</p>
         </div>
         <div className="space-y-6">
           <div className="rounded-[1.75rem] bg-white p-6 shadow-xl ring-1 ring-slate-200 dark:bg-zinc-900 dark:ring-white/10">
@@ -94,9 +94,9 @@ export default function StatusPage() {
           <div className="rounded-[1.75rem] bg-white p-6 shadow-xl ring-1 ring-slate-200 dark:bg-zinc-900 dark:ring-white/10">
             <h2 className="text-xl font-semibold mb-4">Quick Actions</h2>
             <div className="grid gap-3 sm:grid-cols-3">
-              <Link href="/wallet" className="rounded-full bg-slate-950 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-slate-800">Generate Wallet</Link>
-              <Link href="/dashboard" className="rounded-full bg-blue-600 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-blue-700">Enable Mining</Link>
-              <Link href="/chat" className="rounded-full border border-slate-300 px-4 py-3 text-center text-sm font-semibold text-slate-950 hover:bg-slate-100 dark:border-zinc-700 dark:text-slate-100 dark:hover:bg-zinc-800">Join Chat</Link>
+              <Link href="/wallet" className="rounded-full bg-orange-500 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-orange-600">Generate Wallet</Link>
+              <Link href="/dashboard" className="rounded-full bg-orange-500 px-4 py-3 text-center text-sm font-semibold text-white hover:bg-orange-600">Enable Mining</Link>
+              <Link href="/chat" className="rounded-full border border-orange-300 px-4 py-3 text-center text-sm font-semibold text-orange-900 hover:bg-orange-50 dark:border-orange-500 dark:text-orange-200 dark:hover:bg-orange-950">Join Chat</Link>
             </div>
           </div>
         </div>

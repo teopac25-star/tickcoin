@@ -7,25 +7,25 @@ export default function About() {
   return (
     <SiteShell>
       <main className="max-w-4xl mx-auto py-16 px-6">
-        <h1 className="text-4xl font-bold text-center text-black dark:text-zinc-50 mb-8">About Ionut</h1>
+        <h1 className="text-4xl font-bold text-center text-black dark:text-zinc-50 mb-8">About TickCoin</h1>
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">What is Ionut?</h2>
+          <h2 className="text-2xl font-semibold mb-4">What is TickCoin?</h2>
           <p className="text-lg text-zinc-600 dark:text-zinc-400 mb-4">
-            Ionut is a privacy-first cryptocurrency built for anonymous transfers and secure token management. It combines Tor access with blockchain standards, making it easy to stay private while staying on-chain.
+            TickCoin is a Bitcoin-inspired privacy cryptocurrency that brings Tor access, local wallet control, and secure mnemonic recovery together in one app. It honors Bitcoin's permissionless design while adding strong anonymity and wallet usability.
           </p>
         </section>
         <section className="mb-12">
-          <h2 className="text-2xl font-semibold mb-4">Tokenomics</h2>
+          <h2 className="text-2xl font-semibold mb-4">Token Model</h2>
           <ul className="list-disc list-inside text-lg text-zinc-600 dark:text-zinc-400 space-y-2">
-            <li><strong>Total Supply:</strong> 1.5 billion IONUT</li>
-            <li><strong>Max Circulating:</strong> 1 billion IONUT</li>
+            <li><strong>Total Supply:</strong> 10 billion TICK</li>
+            <li><strong>Max Circulating:</strong> 10 billion TICK</li>
             <li><strong>Contract:</strong> ERC-20 compatible with OpenZeppelin best practices</li>
           </ul>
         </section>
         <section className="mb-12">
           <h2 className="text-2xl font-semibold mb-4">Inspired by privacy-first tools</h2>
           <p className="text-lg text-zinc-600 dark:text-zinc-400">
-            Ionut is inspired by trusted privacy applications such as Tor Browser, Monero, and Electrum. It blends anonymous access, local wallet safety, and a simple transaction flow for users who value privacy and usability.
+            TickCoin is inspired by trusted privacy applications such as Tor Browser, Monero, Electrum, and the Bitcoin mining ecosystem. It blends anonymous access, SHA-256 proof-of-work intuition, local wallet safety, and a simple transaction flow for users who value privacy and usability.
           </p>
         </section>
         <section className="mb-12">
@@ -40,8 +40,8 @@ export default function About() {
               <p>Generate wallets locally with encrypted keys and mnemonic recovery.</p>
             </div>
             <div className="rounded-3xl bg-white dark:bg-zinc-800 p-6 shadow-lg ring-1 ring-zinc-100 dark:ring-zinc-800">
-              <h3 className="text-xl font-medium mb-2">Decentralized</h3>
-              <p>No central control—community-driven and blockchain-powered.</p>
+              <h3 className="text-xl font-medium mb-2">Bitcoin-inspired</h3>
+              <p>Built around Bitcoin-style openness, fixed supply thinking, and permissionless wallet generation.</p>
             </div>
             <div className="rounded-3xl bg-white dark:bg-zinc-800 p-6 shadow-lg ring-1 ring-zinc-100 dark:ring-zinc-800">
               <h3 className="text-xl font-medium mb-2">Future Ready</h3>
@@ -59,7 +59,7 @@ export default function About() {
           </ul>
         </section>
         <div className="text-center mt-12">
-          <Link href="/wallet" className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-black px-6 text-white transition-colors hover:bg-zinc-800 dark:bg-zinc-50 dark:text-black dark:hover:bg-zinc-200">
+          <Link href="/wallet" className="inline-flex h-12 items-center justify-center gap-2 rounded-full bg-orange-500 px-6 text-white transition-colors hover:bg-orange-600">
             Get Started with a Wallet
           </Link>
         </div>
