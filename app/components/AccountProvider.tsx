@@ -8,7 +8,7 @@ export interface AccountData {
   username: string;
   email?: string;
   balance: number;
-  wallets?: unknown[];
+  wallets?: Array<{ address: string }>;
   messages?: unknown[];
   transactions?: unknown[];
   notifications?: unknown[];

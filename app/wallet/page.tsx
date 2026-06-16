@@ -12,12 +12,16 @@ interface Wallet {
   mnemonic: string;
 }
 
+interface SavedWallet {
+  address: string;
+}
+
 interface Account {
   username: string;
   email: string;
   balance: number;
   password?: string;
-  wallets: Wallet[];
+  wallets: SavedWallet[];
   [key: string]: unknown;
 }
 
@@ -26,10 +30,10 @@ export default function WalletPage() {
   const { account: globalAccount, setAccount: setGlobalAccount } = useAccount() as {
     account: Account | null;
     setAccount: (account: Account | null) => void;
-    updateAccount: (updater: (current: Account | null) => Account | null) => void;
+    updateAccount: (updater: (current: Account | null) => Account | null) => Account | null;
     clearAccount: () => void;
   };
-  const [savedWallets, setSavedWallets] = useState<Wallet[]>([]);
+  const [savedWallets, setSavedWallets] = useState<SavedWallet[]>([]);
   const [message, setMessage] = useState('');
   const [stealthAddress, setStealthAddress] = useState<string | null>(null);
 
@@ -39,9 +43,10 @@ export default function WalletPage() {
       return;
     }
 
+    const savedWallet = { address: wallet.address };
     const updatedAccount: Account = {
       ...globalAccount,
-      wallets: [...(globalAccount.wallets || []), wallet],
+      wallets: [...(globalAccount.wallets || []), savedWallet],
     };
     setGlobalAccount(updatedAccount);
     setSavedWallets(updatedAccount.wallets || []);

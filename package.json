@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "host:onion": "sudo ./full_setup.sh",
-    "lint": "eslint"
+    "lint": "eslint . --ext .js,.ts,.tsx",
+    "audit": "npm audit --audit-level=moderate"
   },
   "dependencies": {
     "@openzeppelin/contracts": "^5.4.0",
@@ -24,7 +25,6 @@
     "dotenv": "^17.2.3",
     "eslint": "^9",
     "eslint-config-next": "16.1.4",
-    "prisma": "^7.3.0",
     "tailwindcss": "^4",
     "typescript": "^5"
   }

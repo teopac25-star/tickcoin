@@ -120,10 +120,17 @@ function generateSessionToken() {
   return crypto.randomBytes(24).toString('hex');
 }
 
+function sanitizeWallet(wallet: Wallet) {
+  return {
+    address: wallet.address,
+  };
+}
+
 function sanitizeAccount(account: Account) {
   const { passwordHash, sessionToken, ...rest } = account as Account & { notifications?: any; sessionToken?: string };
   return {
     ...rest,
+    wallets: Array.isArray(account.wallets) ? account.wallets.map(sanitizeWallet) : [],
     notifications: Array.isArray((rest as any).notifications) ? rest.notifications : [],
   };
 }

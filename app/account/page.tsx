@@ -181,6 +181,7 @@ const requestAccount = async (body: any) => {
     method: 'POST',
     headers,
     body: JSON.stringify(body),
+    credentials: 'include',
   });
   const data = await response.json();
   if (!response.ok) {
@@ -198,6 +199,7 @@ const fetchAccount = async (username: string) => {
 
   const response = await fetch(`/api/account?username=${encodeURIComponent(username)}`, {
     headers,
+    credentials: 'include',
   });
   const data = await response.json();
   if (!response.ok) {

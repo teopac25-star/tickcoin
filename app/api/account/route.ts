@@ -15,9 +15,32 @@ import {
 } from '../../../lib/server-db';
 
 const AUTH_HEADER = 'x-tickcoin-session';
+const COOKIE_NAME = 'tickcoin_session';
+
+function parseCookieHeader(cookieHeader: string | null) {
+  if (!cookieHeader) return null;
+  return Object.fromEntries(
+    cookieHeader.split(';').map(part => {
+      const [name, ...value] = part.trim().split('=');
+      return [name, decodeURIComponent(value.join('='))];
+    }),
+  );
+}
 
 function extractAuthToken(request: Request) {
-  return request.headers.get(AUTH_HEADER) ?? '';
+  const cookieHeader = request.headers.get('cookie');
+  const cookies = parseCookieHeader(cookieHeader);
+  return (
+    request.headers.get(AUTH_HEADER)
+    || cookies?.[COOKIE_NAME]
+    || ''
+  );
+}
+
+function createAuthCookie(token: string) {
+  const secure = process.env.NODE_ENV === 'production';
+  const maxAge = 60 * 60 * 24 * 7; // 1 week
+  return `${COOKIE_NAME}=${token}; Path=/; HttpOnly; SameSite=Strict; Max-Age=${maxAge};${secure ? ' Secure;' : ''}`;
 }
 
 export async function GET(request: Request) {
@@ -57,10 +80,14 @@ export async function POST(request: Request) {
         }
         const account = await registerAccount(username, email, password);
         const full = await getAccountByUsername(username);
-        return NextResponse.json({
+        const response = NextResponse.json({
           account,
           token: full?.sessionToken ?? null,
         });
+        if (full?.sessionToken) {
+          response.headers.set('Set-Cookie', createAuthCookie(full.sessionToken));
+        }
+        return response;
       }
       case 'login': {
         const { username, password } = body;
@@ -69,10 +96,14 @@ export async function POST(request: Request) {
         }
         const account = await loginAccount(username, password);
         const full = await getAccountByUsername(username);
-        return NextResponse.json({
+        const response = NextResponse.json({
           account,
           token: full?.sessionToken ?? null,
         });
+        if (full?.sessionToken) {
+          response.headers.set('Set-Cookie', createAuthCookie(full.sessionToken));
+        }
+        return response;
       }
       default: {
         const { username } = body;

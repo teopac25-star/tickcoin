@@ -152,6 +152,32 @@ export default function DashboardPage() {
 
   const workerRef = useRef<Worker | null>(null);
   const lastStatsRef = useRef(0);
+  const persistTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
+  const persistMiningReward = async (updatedAccount: any) => {
+    if (!account?.username || !account?.sessionToken) return;
+    
+    try {
+      await fetch('/api/account', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'x-tickcoin-session': String(account.sessionToken),
+        },
+        body: JSON.stringify({
+          username: account.username,
+          action: 'transaction',
+          transaction: {
+            type: 'mining_reward',
+            amount: 0.01,
+            timestamp: new Date().toISOString(),
+          },
+        }),
+      });
+    } catch (error) {
+      console.error('Failed to persist mining reward:', error);
+    }
+  };
 
   const consentStatus = minerConsent
     ? 'Consent enabled — your browser may mine while this page is active.'
@@ -273,10 +299,12 @@ export default function DashboardPage() {
         setSelectedBlockIndex((currentIndex) => Math.max(currentIndex, 0));
         updateAccount((prevAccount) => {
           if (!prevAccount) return prevAccount;
-          return {
+          const updated = {
             ...prevAccount,
             balance: parseFloat((prevAccount.balance + 0.01).toFixed(2)),
           };
+          persistMiningReward(updated);
+          return updated;
         });
       }
     };
@@ -290,7 +318,7 @@ export default function DashboardPage() {
         workerRef.current = null;
       }
     };
-  }, [mining, minerConsent, updateAccount]);
+  }, [mining, minerConsent, updateAccount, account]);
 
   const handleConsentChange = () => {
     const nextConsent = !minerConsent;
