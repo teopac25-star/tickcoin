@@ -1,8 +1,10 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import SiteShell from '../components/SiteShell';
 import { useAccount } from '../components/AccountProvider';
+
+const GLOBAL_TRANSFER_KEY = 'tickcoin_global_transfers';
 
 interface Wallet {
   address: string;
@@ -50,6 +52,7 @@ interface Account {
   messages: AccountMessage[];
   transactions: TransactionEntry[];
   notifications: AccountNotification[];
+  createdAt: string;
 }
 
 type AuthMode = 'create' | 'login';
@@ -165,12 +168,7 @@ const maskEmail = (email: string) => {
   return `${visibleLocal}@${visibleDomain}`;
 };
 
-const maskText = (value: string) => {
-  if (value.length <= 4) return '****';
-  return `${value.slice(0, 2)}***${value.slice(-2)}`;
-};
-
-const requestAccount = async (body: any) => {
+const requestAccount = async (body: Record<string, unknown>) => {
   const token = getSessionToken();
   const headers: Record<string, string> = { 'Content-Type': 'application/json' };
   if (token) {
@@ -208,32 +206,62 @@ const fetchAccount = async (username: string) => {
   return data as Account;
 };
 
-const normalizeAccount = (raw: any): Account => ({
-  username: raw.username || '',
-  email: raw.email || '',
-  balance: typeof raw.balance === 'number' ? raw.balance : parseFloat(raw.balance) || 0,
-  password: raw.password || undefined,
-  wallets: Array.isArray(raw.wallets) ? raw.wallets : [],
-  messages: Array.isArray(raw.messages)
-    ? raw.messages.map((message: any) => ({
-        id: message?.id || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        sender: message?.sender === 'them' ? 'them' : 'me',
-        text: message?.text || '',
-        createdAt: message?.createdAt || new Date().toISOString(),
-      }))
-    : [],
-  transactions: Array.isArray(raw.transactions) ? raw.transactions : [],
-  notifications: Array.isArray(raw.notifications)
-    ? raw.notifications.map((notification: any) => ({
-        id: notification?.id || `${Date.now()}-${Math.random().toString(36).slice(2)}`,
-        type: notification?.type === 'transaction' ? 'transaction' : 'message',
-        title: notification?.title || 'Notification',
-        description: notification?.description || '',
-        createdAt: notification?.createdAt || new Date().toISOString(),
-        read: notification?.read === true,
-      }))
-    : [],
-});
+const normalizeAccount = (raw: unknown): Account => {
+  const account = (raw as Record<string, unknown>) ?? {};
+  const parseEntry = (item: unknown) => {
+    const entry = item as Record<string, unknown>;
+    return {
+      id: typeof entry?.id === 'string' ? entry.id : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      sender: entry?.sender === 'them' ? 'them' : 'me',
+      text: typeof entry?.text === 'string' ? entry.text : '',
+      createdAt: typeof entry?.createdAt === 'string' ? entry.createdAt : new Date().toISOString(),
+    } as AccountMessage;
+  };
+
+  const parseNotification = (item: unknown) => {
+    const notification = item as Record<string, unknown>;
+    return {
+      id: typeof notification?.id === 'string' ? notification.id : `${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      type: notification?.type === 'transaction' ? 'transaction' : 'message',
+      title: typeof notification?.title === 'string' ? notification.title : 'Notification',
+      description: typeof notification?.description === 'string' ? notification.description : '',
+      createdAt: typeof notification?.createdAt === 'string' ? notification.createdAt : new Date().toISOString(),
+      read: notification?.read === true,
+    } as AccountNotification;
+  };
+
+  return {
+    username: typeof account.username === 'string' ? account.username : '',
+    email: typeof account.email === 'string' ? account.email : '',
+    balance: typeof account.balance === 'number' ? account.balance : typeof account.balance === 'string' ? parseFloat(account.balance) || 0 : 0,
+    password: typeof account.password === 'string' ? account.password : undefined,
+    createdAt: typeof account.createdAt === 'string' ? account.createdAt : new Date().toISOString(),
+    wallets: Array.isArray(account.wallets)
+      ? account.wallets
+          .filter((wallet): wallet is { address: string } =>
+            typeof wallet === 'object' && wallet !== null && typeof (wallet as { address?: unknown }).address === 'string',
+          )
+          .map((wallet) => ({ address: wallet.address, privateKey: '', mnemonic: '' }))
+      : [],
+    messages: Array.isArray(account.messages) ? account.messages.map(parseEntry) : [],
+    transactions: Array.isArray(account.transactions)
+      ? account.transactions
+          .filter((tx: unknown): tx is TransactionEntry =>
+            typeof tx === 'object' && tx !== null && typeof (tx as { id?: unknown }).id === 'string',
+          )
+          .map((tx) => ({
+            id: tx.id,
+            type: tx.type === 'received' ? 'received' : 'sent',
+            amount: typeof tx.amount === 'number' ? tx.amount : Number(tx.amount) || 0,
+            counterparty: typeof tx.counterparty === 'string' ? tx.counterparty : '',
+            description: typeof tx.description === 'string' ? tx.description : '',
+            timestamp: typeof tx.timestamp === 'string' ? tx.timestamp : new Date().toISOString(),
+            recipient: typeof tx.recipient === 'string' ? tx.recipient : undefined,
+          }))
+      : [],
+    notifications: Array.isArray(account.notifications) ? account.notifications.map(parseNotification) : [],
+  };
+};
 
 export default function AccountPage() {
   const [currentAccount, setCurrentAccount] = useState<Account | null>(null);
@@ -259,17 +287,48 @@ export default function AccountPage() {
     clearAccount: () => void;
   };
 
-  const getStoredAccount = (): Account | null => {
-    const username = getSessionUsername();
-    if (!username) return null;
-    return null;
-  };
-
-  const saveAccount = (account: Account) => {
+  const saveAccount = useCallback((account: Account) => {
     const normalized = normalizeAccount(account);
     setCurrentAccount(normalized);
     setGlobalAccount(normalized);
-  };
+  }, [setGlobalAccount]);
+
+  const loadGlobalTransfers = useCallback((): GlobalTransfer[] => {
+    const raw = localStorage.getItem(GLOBAL_TRANSFER_KEY);
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      localStorage.removeItem(GLOBAL_TRANSFER_KEY);
+      return [];
+    }
+  }, []);
+
+  const syncIncomingTransfers = useCallback((account: Account) => {
+    const globalTransfers = loadGlobalTransfers();
+    const existingIds = new Set(account.transactions.map((tx) => tx.id));
+    const incoming = globalTransfers.filter((transfer) => transfer.recipient === account.username && !existingIds.has(transfer.id));
+    if (incoming.length === 0) return account;
+
+    const receivedTransactions = incoming.map((transfer) => ({
+      id: transfer.id,
+      type: 'received' as const,
+      amount: transfer.amount,
+      counterparty: transfer.sender,
+      description: transfer.description || `Transfer from ${transfer.sender}`,
+      timestamp: transfer.timestamp,
+      recipient: transfer.recipient,
+    }));
+
+    const updated = {
+      ...account,
+      balance: account.balance + incoming.reduce((sum, transfer) => sum + transfer.amount, 0),
+      transactions: [...receivedTransactions, ...account.transactions],
+    };
+    saveAccount(updated);
+    return updated;
+  }, [loadGlobalTransfers, saveAccount]);
 
   useEffect(() => {
     const handleStorage = (event: StorageEvent) => {
@@ -312,8 +371,8 @@ export default function AccountPage() {
       URL.revokeObjectURL(url);
       setBackupMessage('Encrypted backup created successfully. Keep the password safe.');
       setError('');
-    } catch (error: any) {
-      setError(error?.message || 'Unable to create encrypted backup.');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Unable to create encrypted backup.');
     }
   };
 
@@ -332,52 +391,9 @@ export default function AccountPage() {
       setGlobalAccount(restoredAccount);
       setBackupMessage('Account backup restored successfully.');
       setError('');
-    } catch (error: any) {
-      setError(error?.message || 'Unable to restore backup.');
+    } catch (error: unknown) {
+      setError(error instanceof Error ? error.message : 'Unable to restore backup.');
     }
-  };
-
-  const GLOBAL_TRANSFER_KEY = 'tickcoin_global_transfers';
-
-  const loadGlobalTransfers = (): GlobalTransfer[] => {
-    const raw = localStorage.getItem(GLOBAL_TRANSFER_KEY);
-    if (!raw) return [];
-    try {
-      const parsed = JSON.parse(raw);
-      return Array.isArray(parsed) ? parsed : [];
-    } catch {
-      localStorage.removeItem(GLOBAL_TRANSFER_KEY);
-      return [];
-    }
-  };
-
-  const saveGlobalTransfers = (transfers: GlobalTransfer[]) => {
-    localStorage.setItem(GLOBAL_TRANSFER_KEY, JSON.stringify(transfers));
-  };
-
-  const syncIncomingTransfers = (account: Account) => {
-    const globalTransfers = loadGlobalTransfers();
-    const existingIds = new Set(account.transactions.map((tx) => tx.id));
-    const incoming = globalTransfers.filter((transfer) => transfer.recipient === account.username && !existingIds.has(transfer.id));
-    if (incoming.length === 0) return account;
-
-    const receivedTransactions = incoming.map((transfer) => ({
-      id: transfer.id,
-      type: 'received' as const,
-      amount: transfer.amount,
-      counterparty: transfer.sender,
-      description: transfer.description || `Transfer from ${transfer.sender}`,
-      timestamp: transfer.timestamp,
-      recipient: transfer.recipient,
-    }));
-
-    const updated = {
-      ...account,
-      balance: account.balance + incoming.reduce((sum, transfer) => sum + transfer.amount, 0),
-      transactions: [...receivedTransactions, ...account.transactions],
-    };
-    saveAccount(updated);
-    return updated;
   };
 
   const recentRecipients = currentAccount
@@ -427,7 +443,7 @@ export default function AccountPage() {
       .catch(() => {
         clearSession();
       });
-  }, []);
+  }, [saveAccount, syncIncomingTransfers]);
 
   const switchMode = (mode: AuthMode) => {
     setAuthMode(mode);
@@ -465,6 +481,7 @@ export default function AccountPage() {
       email: form.email.trim(),
       balance: 100,
       password: form.password.trim(),
+      createdAt: new Date().toISOString(),
       wallets: [],
       messages: [
         {
@@ -517,6 +534,7 @@ export default function AccountPage() {
       email: '',
       balance: 0,
       password: loginForm.password.trim(),
+      createdAt: new Date().toISOString(),
       wallets: [],
       messages: [],
       transactions: [],
@@ -567,8 +585,8 @@ export default function AccountPage() {
       setEnteredCode('');
       setStep('ready');
       setFeedback('Account verified and ready.');
-    } catch (err: any) {
-      setError(err.message || 'Unable to verify your account.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to verify your account.');
     }
   };
 
@@ -694,8 +712,8 @@ export default function AccountPage() {
       setTransactionForm({ direction: 'sent', amount: '', counterparty: '', description: '' });
       setError('');
       setFeedback('Transaction recorded successfully.');
-    } catch (err: any) {
-      setError(err.message || 'Unable to record transaction.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to record transaction.');
     }
   };
 
@@ -708,8 +726,8 @@ export default function AccountPage() {
         index,
       });
       saveAccount(normalizeAccount(updatedAccount));
-    } catch (err: any) {
-      setError(err.message || 'Unable to remove wallet.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Unable to remove wallet.');
     }
   };
 
@@ -870,11 +888,37 @@ export default function AccountPage() {
 
         {step === 'ready' && currentAccount && (
           <div className="space-y-8">
-            <div className="rounded-3xl bg-white dark:bg-zinc-800 p-6 shadow-lg ring-1 ring-zinc-100 dark:ring-zinc-800">
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <h2 className="text-xl font-semibold mb-2">Account Dashboard</h2>
-                  <p className="text-zinc-600 dark:text-zinc-400">Manage linked wallets, secure notes, and your transaction record from one place.</p>
+            <div className="rounded-3xl bg-white dark:bg-zinc-950 p-8 shadow-2xl ring-1 ring-white/10">
+              <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
+                <div className="max-w-3xl">
+                  <p className="text-xs uppercase tracking-[0.4em] text-slate-500 dark:text-slate-400">Protected account zone</p>
+                  <h2 className="mt-3 text-4xl font-semibold text-slate-950 dark:text-white">You’re signed in securely.</h2>
+                  <p className="mt-4 text-base leading-7 text-slate-600 dark:text-slate-300">
+                    This dashboard is unlocked only after you’ve verified your identity. Manage your wallets, review activity, and keep your data private.
+                  </p>
+                </div>
+                <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                  <div className="rounded-3xl bg-slate-900 p-5 text-white shadow-sm ring-1 ring-white/10">
+                    <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Account status</p>
+                    <p className="mt-3 text-2xl font-semibold">Verified</p>
+                    <p className="mt-2 text-sm text-slate-400">Session token and 2FA are active.</p>
+                  </div>
+                  <div className="rounded-3xl bg-slate-900 p-5 text-white shadow-sm ring-1 ring-white/10">
+                    <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Security level</p>
+                    <p className="mt-3 text-2xl font-semibold">High</p>
+                    <p className="mt-2 text-sm text-slate-400">Encrypted backups available.</p>
+                  </div>
+                  <div className="rounded-3xl bg-slate-900 p-5 text-white shadow-sm ring-1 ring-white/10">
+                    <p className="text-xs uppercase tracking-[0.35em] text-slate-400">Account age</p>
+                    <p className="mt-3 text-2xl font-semibold">{new Date(currentAccount.createdAt).toLocaleDateString()}</p>
+                    <p className="mt-2 text-sm text-slate-400">Created at {new Date(currentAccount.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <div className="grid gap-2 text-sm text-slate-600 dark:text-slate-400">
+                  <span className="rounded-full bg-emerald-100 px-3 py-1 text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">Active session</span>
+                  <span className="rounded-full bg-slate-100 px-3 py-1 text-slate-900 dark:bg-zinc-800 dark:text-zinc-100">Private data vault</span>
                 </div>
                 <div className="flex flex-wrap gap-3">
                   <button
@@ -919,7 +963,7 @@ export default function AccountPage() {
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
                     <div>
                       <h2 className="text-xl font-semibold">Profile</h2>
-                      <p className="text-sm text-zinc-500 dark:text-zinc-400">Protect your personal details while browsing TickCoin.</p>
+                      <p className="text-sm text-zinc-500 dark:text-zinc-400">Your account details are private and protected by browser storage.</p>
                     </div>
                     <button
                       type="button"
@@ -932,10 +976,11 @@ export default function AccountPage() {
                   <div className="space-y-3 text-sm text-zinc-600 dark:text-zinc-400">
                     <p><strong>Username:</strong> {currentAccount.username}</p>
                     <p><strong>Email:</strong> {privacyMode ? maskEmail(currentAccount.email) : currentAccount.email}</p>
-                    <p><strong>Balance:</strong> {privacyMode ? `${currentAccount.balance.toFixed(2)} TICK` : `${currentAccount.balance.toFixed(2)} TICK`}</p>
+                    <p><strong>Balance:</strong> <span className="font-semibold text-black dark:text-white">{currentAccount.balance.toFixed(2)} TICK</span></p>
                     <p><strong>Wallets:</strong> {currentAccount.wallets.length}</p>
                     <p><strong>Messages:</strong> {currentAccount.messages.length}</p>
                     <p><strong>Transactions:</strong> {currentAccount.transactions.length}</p>
+                    <p><strong>Session:</strong> <span className="rounded-full bg-emerald-100 px-2 py-1 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-900 dark:text-emerald-200">Active</span></p>
                   </div>
                 </div>
 

@@ -8,10 +8,14 @@ export default function ThemeToggle() {
   const [theme, setTheme] = useState<"light" | "dark">("light");
 
   useEffect(() => {
-    const stored = window.localStorage.getItem(THEME_KEY) as "light" | "dark" | null;
-    const preferred = stored || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
-    setTheme(preferred);
-    document.documentElement.classList.toggle("dark", preferred === "dark");
+    const initializeTheme = () => {
+      const stored = window.localStorage.getItem(THEME_KEY) as "light" | "dark" | null;
+      const preferred = stored || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light");
+      setTheme(preferred);
+      document.documentElement.classList.toggle("dark", preferred === "dark");
+    };
+
+    initializeTheme();
   }, []);
 
   const toggleTheme = () => {

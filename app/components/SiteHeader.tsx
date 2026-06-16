@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import ThemeToggle from "./ThemeToggle";
 import { useAccount } from "./AccountProvider";
@@ -24,8 +25,9 @@ export default function SiteHeader() {
     <header className="sticky top-0 z-40 border-b border-zinc-200 bg-white/90 backdrop-blur-xl px-6 py-4 shadow-sm dark:border-zinc-800 dark:bg-zinc-950/95">
       <div className="mx-auto flex flex-col gap-4 md:flex-row md:items-center md:justify-between max-w-[1200px]">
         <div>
-          <Link href="/" className="text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
-            ₿ Ionut
+          <Link href="/" className="flex items-center text-2xl font-bold tracking-tight text-slate-950 dark:text-white">
+            <Image src="/wolf.svg" alt="Wolf logo" width={32} height={32} className="mr-3" />
+            TickCoin
           </Link>
           <p className="text-sm text-zinc-500 dark:text-zinc-400 mt-1">Privacy-first crypto with Tor hosting and browser mining.</p>
         </div>

@@ -43,17 +43,17 @@ export default function ChatPage() {
   const [draft, setDraft] = useState('');
   const [selectedThread, setSelectedThread] = useState('Global');
   const [manualRecipient, setManualRecipient] = useState('');
-  const [status, setStatus] = useState('Connected');
+  const [status] = useState('Connected');
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
 
-    const username = getSessionUsername();
-    if (username) {
-      setUsername(username);
-    }
-
     const load = async () => {
+      const usernameFromSession = getSessionUsername();
+      if (usernameFromSession) {
+        setUsername(usernameFromSession);
+      }
+
       const messages = await loadChatMessages();
       setMessages(messages);
     };
@@ -211,7 +211,10 @@ export default function ChatPage() {
                             : 'bg-white text-zinc-900 hover:bg-zinc-100 dark:bg-zinc-800 dark:text-zinc-200 dark:hover:bg-zinc-700'
                         }`}
                       >
-                        {contact}
+                        <span>{contact}</span>
+                        {threadCounts.get(contact) ? (
+                          <span className="ml-2 text-xs text-zinc-500">({threadCounts.get(contact)})</span>
+                        ) : null}
                       </button>
                     ))}
                   </div>

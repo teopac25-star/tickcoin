@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   title: "TickCoin | Anonymous Crypto",
   description: "TickCoin is a privacy-first cryptocurrency with Tor integration, secure wallets, and anonymous access.",
   icons: {
-    icon: "/favicon.ico",
+    icon: "/wolf.svg",
   },
 };
 

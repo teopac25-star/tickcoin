@@ -175,7 +175,8 @@ export async function POST(request: Request) {
         }
       }
     }
-  } catch (error: any) {
-    return NextResponse.json({ message: error?.message || 'An error occurred.' }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An error occurred.';
+    return NextResponse.json({ message }, { status: 400 });
   }
 }

@@ -39,7 +39,8 @@ export async function PUT(request: Request) {
     }
 
     return NextResponse.json({ message: 'Unsupported action.' }, { status: 400 });
-  } catch (error: any) {
-    return NextResponse.json({ message: error?.message || 'An error occurred.' }, { status: 400 });
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'An error occurred.';
+    return NextResponse.json({ message }, { status: 400 });
   }
 }

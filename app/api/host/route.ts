@@ -48,8 +48,9 @@ async function startTorIfNeeded() {
     });
     torProcess.unref();
     return { active: false, onion: null, message: 'Tor process started. Hidden service will appear shortly.' };
-  } catch (error: any) {
-    return { active: false, onion: null, message: `Unable to start Tor: ${error?.message || 'unknown error'}` };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'unknown error';
+    return { active: false, onion: null, message: `Unable to start Tor: ${message}` };
   }
 }
 

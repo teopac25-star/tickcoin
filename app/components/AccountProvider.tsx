@@ -67,16 +67,21 @@ export function AccountProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored) {
-      try {
-        const parsed = JSON.parse(stored) as AccountData;
-        setAccountState(parsed);
-      } catch {
-        window.localStorage.removeItem(STORAGE_KEY);
-        setAccountState(null);
+
+    const restoreAccount = () => {
+      const stored = window.localStorage.getItem(STORAGE_KEY);
+      if (stored) {
+        try {
+          const parsed = JSON.parse(stored) as AccountData;
+          setAccountState(parsed);
+        } catch {
+          window.localStorage.removeItem(STORAGE_KEY);
+          setAccountState(null);
+        }
       }
-    }
+    };
+
+    restoreAccount();
 
     const handleStorage = (event: StorageEvent) => {
       if (event.key !== STORAGE_KEY) return;

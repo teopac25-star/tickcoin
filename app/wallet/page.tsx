@@ -78,7 +78,11 @@ export default function WalletPage() {
   };
 
   useEffect(() => {
-    setSavedWallets(globalAccount?.wallets || []);
+    const syncSavedWallets = () => {
+      setSavedWallets(globalAccount?.wallets || []);
+    };
+
+    syncSavedWallets();
   }, [globalAccount]);
 
   return (

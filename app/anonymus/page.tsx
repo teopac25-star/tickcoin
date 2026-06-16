@@ -62,14 +62,14 @@ export default function AnonymusPage() {
     const load = async () => {
       const stored = await loadAnonymusPosts();
       setPosts(stored);
+
+      const username = getSessionUsername();
+      if (username) {
+        setStatus(`Anon-${username.slice(0, 6)}`);
+      }
     };
 
     load();
-
-    const username = getSessionUsername();
-    if (username) {
-      setStatus(`Anon-${username.slice(0, 6)}`);
-    }
   }, []);
 
   const createPost = async () => {
@@ -194,6 +194,7 @@ export default function AnonymusPage() {
                 </div>
                 {post.imageUrl ? (
                   <div className="mt-5 overflow-hidden rounded-3xl bg-zinc-100 dark:bg-zinc-900">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={post.imageUrl} alt="Anonymous post image" className="h-80 w-full object-cover" />
                   </div>
                 ) : null}

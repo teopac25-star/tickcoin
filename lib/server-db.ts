@@ -127,11 +127,20 @@ function sanitizeWallet(wallet: Wallet) {
 }
 
 function sanitizeAccount(account: Account) {
-  const { passwordHash, sessionToken, ...rest } = account as Account & { notifications?: any; sessionToken?: string };
+  const { passwordHash, sessionToken, notifications, ...rest } = account as Account & {
+    notifications?: unknown;
+    sessionToken?: string;
+    passwordHash?: string;
+  };
+  void passwordHash;
+  void sessionToken;
+
+  const safeNotifications = Array.isArray(notifications) ? notifications : [];
+
   return {
     ...rest,
     wallets: Array.isArray(account.wallets) ? account.wallets.map(sanitizeWallet) : [],
-    notifications: Array.isArray((rest as any).notifications) ? rest.notifications : [],
+    notifications: safeNotifications,
   };
 }
 
