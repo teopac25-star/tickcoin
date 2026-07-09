@@ -1,0 +1,25 @@
+[Unit]
+Description=TickCoin Privacy-First Crypto with Tor Hidden Service
+After=network.target
+Documentation=https://github.com/teopac25-star/tickcoin
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/path/to/tickcoin
+ExecStart=/path/to/tickcoin/run.sh
+Restart=on-failure
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+Environment="NODE_ENV=production"
+Environment="PORT=3000"
+
+# Security settings (optional, adjust as needed)
+NoNewPrivileges=true
+ProtectHome=yes
+ProtectSystem=strict
+ReadWritePaths=/path/to/tickcoin
+
+[Install]
+WantedBy=multi-user.target
